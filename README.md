@@ -63,14 +63,14 @@ There are presently three component files:
 - `trailer.html`: The closing `</html>` tag, and anything else you want to put in at the end of each file.
 
 ### `/series/`
-There's a folder for each series. Presently, every series will be generated, there is no flag to toggle the generation of series.
+There's a folder for each series. Presently, every series will be generated, there is no flag to toggle the generation of a series.
 
 The name of the series folder matters; this is both the ID of the series, and what the filename/URL will be for the series landing page. For example, a series described in the folder `my-cooking-recipes` will be accessible as `myblog.example.com/series/my-cooking-recipes`.
 
 Each `series` folder has the following files:
 - `order`: A file containing a number; all series are sorted on the `order` value, in ascending order.
 - `short-description`: A brief description; this goes in a `<meta>` tag in the HTML `<head>`; must not contain double quotes or unescaped HTML characters.
-- `title`: The page title; this oges in the HTML `<title>` tag; must not contain unescaped HTML characters.
+- `title`: The page title; this goes in the HTML `<title>` tag; must not contain unescaped HTML characters.
 - `landing-desc.html`: A chunk of HTML to be used on the series landing page (which shows all posts in the series) as well as on the page that shows all series. Should give a nice description of what the series is all about.
 
 ### `/posts/`
