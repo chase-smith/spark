@@ -5,6 +5,8 @@ Basically, it's a static blog site generator, where all content is defined in ea
 
 The idea is that each post belongs to a 'series'; this is different from, and in addition to, tags, of which each post needs at least one. Maybe one series is about cooking recipes, another about project ideas, and yet another about interesting things you learn each day. Each series has a listing page of all published posts in that series. 
 
+Spark is meant for people who want to just get going on a site where they can just start making posts, and don't want to deal with the headaches involved with securing a PHP or CGI driven blog. It is targeted slightly more towards programmers, but it can probably be used by anybody. There's no management interface, it's all files and folders. Spark doesn't support anything regarding a comments section on a blog (though I suppose you could include some JS/HTML in the footer that would do that, and have a separate PHP page or something on your site), nor does it have anything in the way of a subscription system (it does, though, generate an RSS feed).
+
 The name of it is **Spark**, because it's a *static* blog generator.
 Key features:
 - Site content is defined using folders and files (the first iteration of the generator was a series of shell scripts, so having separate files for things like the title or description worked quite well)
