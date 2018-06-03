@@ -114,6 +114,7 @@ The following configuration options exist right now, though some of these will c
 - `HTML_BASE_DIR`: The root HTML directory (with no trailing slash). This directory will be populated with a 'dark' and 'bright' folder. Make sure whoever Spark runs as has the appropriate rights to do so.
 - `CODE_BASE_DIR`: The name of this variable will change in the future. This is the base site content directory (with no trailing slash), the directory that has all of the folders and files detailed above.
 - `SITE_GROUP`: Presently unused, this is the name of the group that all created files/folders will be owned by (note, this doesn't happen yet, I haven't gotten around to doing this yet).
+- `RSS_DESCRIPTION`: A description of the site to include in the RSS feed.
 
 ## How to compile Spark
 This assumes that you have a `gcc` compiler.
@@ -128,8 +129,6 @@ Create a configuration file as defined above.
 Run the `spark` executable compiled above, passing it `--config /path/to/your/site/config/file` (putting in your site configuration file as appropriate).
 
 # Issues and bugs
-There are 2 places that reference my site specifically (the site header and the RSS description). I will be fixing this in the very near future.
-
 When checking the existing RSS file against the newly generated one, to see if it needs to be written out, I don't do proper bounds checking. This will lead to a crash only if the existing RSS file is malformed.
 
 I need to make an example site to include with this repository, so that you can actually see the folder/file structure.
@@ -137,5 +136,7 @@ I need to make an example site to include with this repository, so that you can 
 Spark assumes that the user is going to write content and files that will eventually lead to pages being generated that are valid HTML. This isn't really an issue, but I'm putting it out there. I think it'd be too time-consuming to have Spark validate that every single string is correct, and that your pages have proper HTML and all that. I may eventually put something together that'll do that kind of validation, but it'll never be something that's done every time a site is generated.
 
 Spark only cleans up (deletes) old tag files, I don't yet have it deleting series/posts that no longer exist.
+
+The RSS feed is generated only for the bright site; I either need to generate the file for both themes, or make it be a configuration setting as to which site the URLs in the feed should be pointed at.
 
 Various other bugs and things exist. I am going to be refactoring various pieces, to make it simpler.

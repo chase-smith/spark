@@ -36,7 +36,8 @@ int load_configuration(configuration_struct* configuration, const char* config_f
 		&& try_get_config_value(lines.length, configv, "DARK_NAME", &configuration->dark_name)
 		&& try_get_config_value(lines.length, configv, "HTML_BASE_DIR", &configuration->html_base_dir)
 		&& try_get_config_value(lines.length, configv, "CODE_BASE_DIR", &configuration->code_base_dir)
-		&& try_get_config_value(lines.length, configv, "SITE_GROUP", &configuration->site_group);
+		&& try_get_config_value(lines.length, configv, "SITE_GROUP", &configuration->site_group)
+		&& try_get_config_value(lines.length, configv, "RSS_DESCRIPTION", &configuration->rss_description);
 
 	
 	darray_free(&lines);

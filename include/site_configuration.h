@@ -11,6 +11,7 @@ typedef struct configuration_struct {
 	char* html_base_dir;
 	char* code_base_dir;
 	char* site_group;
+	char* rss_description;
 	dstring_struct raw_config_file;
 } configuration_struct;
 int try_get_config_value(int, char**, const char*, void*);

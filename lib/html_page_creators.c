@@ -44,8 +44,14 @@ int create_page(site_content_struct* site_content, dstring_struct* page_content,
 
 	// Page header
 	CREATE_PAGE_APPEND("<header class='nheader'>\n", "page header")
-	// TODO: This should be passed in as a site setting or something...
-	CREATE_PAGE_APPEND("<a class='leftfloat' href='/'>thinkingincode.ninja</a> <a class='rightfloat' href='https://", "page header")
+	
+	CREATE_PAGE_APPEND("<a class='leftfloat' href='/'>", "page header")
+	// TODO: I should probably have a setting that controls this, instead of just using the hostname.
+	// I only have it using the hostname so that it's no longer hard-coded to my site name.
+	// This will require passing in the configuration as parameter
+	// to every creation function, something that I removed previously... Oh well, it needs to be done.
+	CREATE_PAGE_APPEND(theme->host.str, "page header")
+	CREATE_PAGE_APPEND("</a> <a class='rightfloat' href='https://", "page header")
 	CREATE_PAGE_APPEND(theme->alt_theme->host.str, "page header")
 	CREATE_PAGE_APPEND("/", "page header")
 	CREATE_PAGE_APPEND(page_generation_settings->url_path, "page header")

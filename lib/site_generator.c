@@ -525,7 +525,6 @@ int generate_main_rss(configuration_struct* configuration, site_content_struct* 
 		fprintf(stderr, "Error generating RSS, couldn't init rss dstring\n");
 		return 0;
 	}
-	// TODO: Really, the description of the RSS feed should be a setting...
 	if(!dstring_append(&rss_feed, "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n")
 		|| !dstring_append(&rss_feed, "<rss version=\"2.0\">\n")
 		|| !dstring_append(&rss_feed, "<channel>\n")
@@ -538,7 +537,9 @@ int generate_main_rss(configuration_struct* configuration, site_content_struct* 
 		|| !dstring_append(&rss_feed, "<link>https://")
 		|| !dstring_append(&rss_feed, configuration->bright_host)
 		|| !dstring_append(&rss_feed, "/</link>\n")
-		|| !dstring_append(&rss_feed, "<description>An awesome site about coding</description>\n")) {
+		|| !dstring_append(&rss_feed, "<description>")
+		|| !dstring_append(&rss_feed, configuration->rss_description)
+		|| !dstring_append(&rss_feed, "</description>\n")) {
 		fprintf(stderr, "Error generating RSS, dstring append error\n");
 		dstring_free(&rss_feed);
 		return 0;
