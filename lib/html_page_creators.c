@@ -7,29 +7,20 @@ int create_page(site_content_struct* site_content, dstring_struct* page_content,
 		return PAGE_GENERATION_FAILURE;
 	}
 #define CREATE_PAGE_APPEND(appending, err_message) if(!dstring_append(&page, appending)) { fprintf(stderr, "Error creating page, couldn't append %s\n", err_message); dstring_free(&page); return PAGE_GENERATION_FAILURE; }
+#define CREATE_PAGE_PRINTF_APPEND(err_message, format, args...) if(!dstring_append_printf(&page, format, args)) { fprintf(stderr, "Error creating page, couldn't append %s\n", err_message); dstring_free(&page); return PAGE_GENERATION_FAILURE; }
 	CREATE_PAGE_APPEND(site_content->html_components.header.str, "header")
 	if(page_generation_settings->author != NULL) {
-		CREATE_PAGE_APPEND("<meta name=\"author\" content=\"", "author header")
-		CREATE_PAGE_APPEND(page_generation_settings->author, "author header")
-		CREATE_PAGE_APPEND("\">\n", "author header")
+		CREATE_PAGE_PRINTF_APPEND("author header", "<meta name=\"author\" content=\"%s\">\n", page_generation_settings->author)
 	}
 	if(page_generation_settings->keywords != NULL) {
-		CREATE_PAGE_APPEND("<meta name=\"keywords\" content=\"", "keywords header")
-		CREATE_PAGE_APPEND(page_generation_settings->keywords, "keywords header")
-		CREATE_PAGE_APPEND("\">\n", "keywords header")
+		CREATE_PAGE_PRINTF_APPEND("keywords header", "<meta name=\"keywords\" content=\"%s\">\n", page_generation_settings->keywords)
 	}
 	if(page_generation_settings->description != NULL) {
-		CREATE_PAGE_APPEND("<meta name=\"description\" content=\"", "description header")
-		CREATE_PAGE_APPEND(page_generation_settings->description, "description header")
-		CREATE_PAGE_APPEND("\">\n", "description header")
+		CREATE_PAGE_PRINTF_APPEND("description header", "<meta name=\"description\" content=\"%s\">\n", page_generation_settings->description)
 	}
-	CREATE_PAGE_APPEND("<title>", "title header")
-	CREATE_PAGE_APPEND(page_generation_settings->title, "title header")
-	CREATE_PAGE_APPEND("</title>\n", "title header")
+	CREATE_PAGE_PRINTF_APPEND("title header", "<title>%s</title>\n", page_generation_settings->title)
 	
-	CREATE_PAGE_APPEND("<link rel='canonical' href='", "canonical header")
-	CREATE_PAGE_APPEND(page_generation_settings->canonical_url, "canonical header")
-	CREATE_PAGE_APPEND("'>\n", "canonical header")
+	CREATE_PAGE_PRINTF_APPEND("canonical header", "<link rel='canonical' href='%s'>\n", page_generation_settings->canonical_url)
 
 	CREATE_PAGE_APPEND("</head>", "end head")
 
@@ -43,22 +34,11 @@ int create_page(site_content_struct* site_content, dstring_struct* page_content,
 	CREATE_PAGE_APPEND("<body>", "body begin")
 
 	// Page header
-	CREATE_PAGE_APPEND("<header class='nheader'>\n", "page header")
-	
-	CREATE_PAGE_APPEND("<a class='leftfloat' href='/'>", "page header")
 	// TODO: I should probably have a setting that controls this, instead of just using the hostname.
 	// I only have it using the hostname so that it's no longer hard-coded to my site name.
 	// This will require passing in the configuration as parameter
 	// to every creation function, something that I removed previously... Oh well, it needs to be done.
-	CREATE_PAGE_APPEND(theme->host.str, "page header")
-	CREATE_PAGE_APPEND("</a> <a class='rightfloat' href='https://", "page header")
-	CREATE_PAGE_APPEND(theme->alt_theme->host.str, "page header")
-	CREATE_PAGE_APPEND("/", "page header")
-	CREATE_PAGE_APPEND(page_generation_settings->url_path, "page header")
-	CREATE_PAGE_APPEND("'>[", "page header")
-	CREATE_PAGE_APPEND(theme->alt_theme->name.str, "page header")
-	CREATE_PAGE_APPEND("]</a>\n", "page header")
-	CREATE_PAGE_APPEND("</header>\n", "page header")
+	CREATE_PAGE_PRINTF_APPEND("page header", "<header class='nheader'>\n<a class='leftfloat' href='/'>%s</a> <a class='rightfloat' href='https://%s/%s'>[%s]</a>\n</header>\n", theme->host.str, theme->alt_theme->host.str, page_generation_settings->url_path, theme->alt_theme->name.str)
 
 	CREATE_PAGE_APPEND(page_content->str, "page content")
 	CREATE_PAGE_APPEND(site_content->html_components.footer.str, "page footer")
@@ -66,6 +46,7 @@ int create_page(site_content_struct* site_content, dstring_struct* page_content,
 	CREATE_PAGE_APPEND(site_content->html_components.trailer.str, "page trailer")
 
 #undef CREATE_PAGE_APPEND
+#undef CREATE_PAGE_PRINTF_APPEND
 	dstring_struct dest_filename;
 	if(!dstring_init(&dest_filename)) {
 		fprintf(stderr, "Error generating page, dstring init error\n");
@@ -264,6 +245,7 @@ int create_post_page(site_content_struct* site_content, post_struct* post) {
 		return PAGE_GENERATION_FAILURE;
 	}
 #define CREATE_POST_PAGE_APPEND(appending, err_message) if(!dstring_append(&page, appending)) { fprintf(stderr, "Error creating page, couldn't append %s\n", err_message); dstring_free(&page); dstring_free(&tags); dstring_free(&url_path); dstring_free(&filename); return PAGE_GENERATION_FAILURE; }
+#define CREATE_POST_PAGE_PRINTF_APPEND(err_message, format, args...) if(!dstring_append_printf(&page, format, args)) { fprintf(stderr, "Error creating page, couldn't append %s\n", err_message); dstring_free(&page); dstring_free(&tags); dstring_free(&url_path); dstring_free(&filename); return PAGE_GENERATION_FAILURE; }
 	CREATE_POST_PAGE_APPEND("<article>\n", "article begin")
 	CREATE_POST_PAGE_APPEND("<header>\n", "header begin")
 	CREATE_POST_PAGE_APPEND("<h1>", "post header")
@@ -289,15 +271,9 @@ int create_post_page(site_content_struct* site_content, post_struct* post) {
 	}
 	CREATE_POST_PAGE_APPEND("<footer class=\"flexcontainer postfooter\">\n", "post footer")
 	CREATE_POST_PAGE_APPEND("<div>\n", "post footer")
-	CREATE_POST_PAGE_APPEND("<div>Series: <a href=\"/series/", "post footer series title")
-	CREATE_POST_PAGE_APPEND(post->series_name.str, "post footer series title")
-	CREATE_POST_PAGE_APPEND("\">", "post footer series title")
-	CREATE_POST_PAGE_APPEND(post->series->title.str, "post footer series title")
-	CREATE_POST_PAGE_APPEND("</a></div>\n", "post footer series title")
-	
-	CREATE_POST_PAGE_APPEND("<div>Author: @", "post footer author")
-	CREATE_POST_PAGE_APPEND(post->author.str, "post footer author")
-	CREATE_POST_PAGE_APPEND("</div>\n", "post footer author")
+	CREATE_POST_PAGE_PRINTF_APPEND("post footer series title", "<div>Series: <a href=\"/series/%s\">%s</a></div>\n", post->series_name.str, post->series->title.str)
+
+	CREATE_POST_PAGE_PRINTF_APPEND("post footer author", "<div>Author: @%s</div>\n", post->author.str)
 	
 	CREATE_POST_PAGE_APPEND("<div>Tags: ", "post footer tags")
 	for(size_t i = 0; i < post->tags.length; i++) {
@@ -321,32 +297,20 @@ int create_post_page(site_content_struct* site_content, post_struct* post) {
 			dstring_free(&filename);
 			return PAGE_GENERATION_FAILURE;
 		}
-		CREATE_POST_PAGE_APPEND("<a href=\"/tags/", "post footer tags")
-		CREATE_POST_PAGE_APPEND(tag, "post footer tags")
-		CREATE_POST_PAGE_APPEND("\">", "post footer tags")
-		CREATE_POST_PAGE_APPEND(tag, "post footer tags")
-		CREATE_POST_PAGE_APPEND("</a>", "post footer tags")
+		CREATE_POST_PAGE_PRINTF_APPEND("post footer tags", "<a href=\"/tags/%s\">%s</a>", tag, tag)
 	}
-	CREATE_POST_PAGE_APPEND("</div>\n", "post footer tags")
-	CREATE_POST_PAGE_APPEND("</div>\n", "post footer left side")
+	CREATE_POST_PAGE_APPEND("</div>\n</div>\n", "close post footer")
 
-	CREATE_POST_PAGE_APPEND("<div>\n", "post footer right")
-	CREATE_POST_PAGE_APPEND("<div>Written: ", "post written date")
-	CREATE_POST_PAGE_APPEND(post->written_date.str, "post written date")
-	CREATE_POST_PAGE_APPEND("</div>\n", "post written date")
+	CREATE_POST_PAGE_PRINTF_APPEND("Post right footer", "<div>\n<div>Written: %s</div>\n", post->written_date.str)
 	
 	if(post->updated_at.length >0) {
-		CREATE_POST_PAGE_APPEND("<div>Updated: ", "post updated at")
-		CREATE_POST_PAGE_APPEND(post->updated_at.str, "post updated at")
-		CREATE_POST_PAGE_APPEND("</div>\n", "post updated at")
+		CREATE_POST_PAGE_PRINTF_APPEND("post updated at", "<div>Updated: %s</div>\n", post->updated_at.str)
 	}
-	CREATE_POST_PAGE_APPEND("</div>\n", "post footer left side close")
-	CREATE_POST_PAGE_APPEND("</footer>\n", "post footer close")
-	CREATE_POST_PAGE_APPEND("</article>\n", "post article close")
-	CREATE_POST_PAGE_APPEND("</main>\n", "post main close")
+	CREATE_POST_PAGE_APPEND("</div>\n</footer>\n</article>\n</main>\n", "post close")
 	
 
 #undef CREATE_POST_PAGE_APPEND
+#undef CREATE_POST_PAGE_PRINTF_APPEND
 	page_generation_settings_struct page_generation_settings;
 	page_generation_settings.filename = filename.str;
 	page_generation_settings.keywords = tags.str;

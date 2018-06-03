@@ -155,23 +155,15 @@ dstring_struct* dstring_append_printf(dstring_struct* dstring, const char* forma
 	// TODO: Check if printf failed
 	va_list argptr;
 	va_start(argptr, format);
-	// Going to use this to determine how much space is actually needed
-	char buff[3];
-	size_t num_needed = vsnprintf(buff, 2, format, argptr);
+	char* auto_str;
+	int num_written = vasprintf(&auto_str, format, argptr);
 	va_end(argptr);
-	// I might be adding an extra byte here, but I don't really care... Better
-	// safe than sorry.
-	if((dstring->total_length - dstring->length) < (num_needed + 1)) {
-		if(!dstring_resize(dstring, num_needed)) {
-			return NULL;
-		}
+	if(num_written == -1) {
+		return NULL;
 	}
-	va_list argptr2;
-	va_start(argptr2, format);
-	int num_written = vsnprintf(&dstring->str[dstring->length], num_needed+1, format, argptr2);
-	dstring->length += num_written;
-	va_end(argptr2);
-	return dstring;
+	dstring_struct* append_result = dstring_append(dstring, auto_str);
+	free(auto_str);
+	return append_result;
 }
 // Will shift the null byte and length back. Will stop at 0.
 void dstring_remove_num_chars_in_text(dstring_struct* dstring, const char* text) {
@@ -293,7 +285,10 @@ int dstring_write_file_if_different(dstring_struct* dstring, const char* filenam
 
 int dstring_test() {
 	dstring_struct dstring;
-	dstring_init(&dstring);
+	if(dstring_init(&dstring) == NULL) {
+		fprintf(stderr, "Error initializing dstring\n");
+		return 0;
+	}
 	dstring_append(&dstring, "Hello, world!");
 	printf("%s\n%zu\n%zu\n", dstring.str, dstring.total_length, dstring.length);
 	dstring_append(&dstring, "\nYo, this is a test!");

@@ -1,6 +1,7 @@
 #ifndef DOBJECTS_INCLUDE
 #define DOBJECTS_INCLUDE
 #define _BSD_SOURCE
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -48,7 +49,7 @@ darray_struct* darray_init(darray_struct*, size_t);
 void darray_free(darray_struct*);
 darray_struct* darray_increase_size_specific_amount(darray_struct*, size_t);
 darray_struct* darray_increase_size(darray_struct*);
-darray_struct* darray_append(darray_struct*, const void*);
+darray_struct* darray_append(darray_struct*, const void*) __attribute__((hot));
 void* darray_get_elem(darray_struct*, size_t);
 darray_struct* darray_clone(darray_struct*);
 dstring_struct* dstring_init_with_size(dstring_struct*, size_t);
@@ -56,8 +57,8 @@ dstring_struct* dstring_init(dstring_struct*);
 void dstring_free(dstring_struct*);
 void darray_of_dstrings_free(darray_struct*);
 dstring_struct* dstring_resize(dstring_struct*, size_t);
-dstring_struct* dstring_append(dstring_struct*, const char*);
-dstring_struct* dstring_append_printf(dstring_struct*, const char*, ...);
+dstring_struct* dstring_append(dstring_struct*, const char*) __attribute__((hot));
+dstring_struct* dstring_append_printf(dstring_struct*, const char*, ...) __attribute__((hot));
 void dstring_remove_num_chars_in_text(dstring_struct*, const char*);
 dstring_struct* dstring_read_file(dstring_struct*, const char*);
 dstring_struct* dstring_read_process_output(dstring_struct*, FILE*, int*);
