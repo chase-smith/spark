@@ -29,6 +29,8 @@ Key features:
 
 I do intend on eventually adding in some scripts to make it so that all you have to do is have a blank CentOS server and run a couple of scripts to get a blog site up and running.
 
+I've included an example site in this repository (in the `/example/` folder); to see how it looks, check out https://spark.thinkingincode.ninja/.
+
 # Using Spark
 ## Site file structure
 There need to be the following folders. They will be described in more detail below.
@@ -130,8 +132,6 @@ Run the `spark` executable compiled above, passing it `--config /path/to/your/si
 
 # Issues and bugs
 When checking the existing RSS file against the newly generated one, to see if it needs to be written out, I don't do proper bounds checking. This will lead to a crash only if the existing RSS file is malformed.
-
-I need to make an example site to include with this repository, so that you can actually see the folder/file structure.
 
 Spark assumes that the user is going to write content and files that will eventually lead to pages being generated that are valid HTML. This isn't really an issue, but I'm putting it out there. I think it'd be too time-consuming to have Spark validate that every single string is correct, and that your pages have proper HTML and all that. I may eventually put something together that'll do that kind of validation, but it'll never be something that's done every time a site is generated.
 
