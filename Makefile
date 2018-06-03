@@ -7,7 +7,8 @@ SRCFILES=$(wildcard src/*.c)
 bin/spark: $(HEADERS) $(LIBFILES) $(SRCFILES)
 	$(CC) $(CCFLAGS) $(LIBFILES) $(SRCFILES) -o bin/spark
 
-
+SPARKDEMO.build: example/posts/*/* example/misc_pages/*/* example/series/*/* example/components/* example/themes/*/*
+	bin/spark --config SPARKDEMO.conf | tee SPARKDEMO.build
 
 .PHONY: clean
 clean:

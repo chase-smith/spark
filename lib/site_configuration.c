@@ -61,15 +61,11 @@ int do_pre_validations(configuration_struct* configuration) {
 	// Reusing the dstring for efficiency
 	dstring_remove_num_chars_in_text(&base_dir, configuration->code_base_dir);
 	dstring_append(&base_dir, configuration->html_base_dir);
-	int html_base_dirs_exist = try_check_dir_exists(&base_dir, "/bright", "HTML base")
-		&& try_check_dir_exists(&base_dir, "/dark", "HTML base");
-	
-	if(!html_base_dirs_exist) {
-		dstring_free(&base_dir);
-		return 0;
-	}
-	
-	int make_html_dirs_res = make_directory(&base_dir, "/bright/posts")
+
+	int make_html_dirs_res = 
+		make_directory(&base_dir, "/bright")
+		&& make_directory(&base_dir, "/dark")
+		&& make_directory(&base_dir, "/bright/posts")
 		&& make_directory(&base_dir, "/bright/series")
 		&& make_directory(&base_dir, "/bright/tags")
 		&& make_directory(&base_dir, "/dark/posts")

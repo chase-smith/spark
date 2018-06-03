@@ -49,7 +49,7 @@ int make_directory(dstring_struct* base_dir, const char* dir) {
 		fprintf(stderr, "Unable to create directory %s%s, dstring append error\n", base_dir->str, dir);
 		return 0;
 	}
-	int mkdir_failed = mkdir(base_dir->str, 000754);
+	int mkdir_failed = mkdir(base_dir->str, 000755);
 	if(mkdir_failed) {
 		if(errno == EEXIST) {
 			mkdir_failed = 0;
