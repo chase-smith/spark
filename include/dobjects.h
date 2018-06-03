@@ -43,29 +43,29 @@ typedef struct darray_struct {
 
 
 
-darray_struct* darray_init_with_size(darray_struct* darray, size_t elem_size, size_t initial_size);
-darray_struct* darray_init(darray_struct* darray, size_t elem_size);
-void darray_free(darray_struct* darray);
-darray_struct* darray_increase_size_specific_amount(darray_struct* darray, size_t additional_elems);
-darray_struct* darray_increase_size(darray_struct* darray);
-darray_struct* darray_append(darray_struct* darray, const void* elem);
-void* darray_get_elem(darray_struct* darray, size_t index);
-darray_struct* darray_clone(darray_struct* darray);
-dstring_struct* dstring_init_with_size(dstring_struct* dstring, size_t initial_size);
-dstring_struct* dstring_init(dstring_struct* dstring);
-void dstring_free(dstring_struct* dstring);
-void darray_of_dstrings_free(darray_struct* darray);
-dstring_struct* dstring_resize(dstring_struct* dstring, size_t min_additional_bytes);
-dstring_struct* dstring_append(dstring_struct* dstring, const char* text);
-dstring_struct* dstring_append_printf(dstring_struct* dstring, const char* format, ...);
-void dstring_remove_num_chars_in_text(dstring_struct* dstring, const char* text);
-dstring_struct* dstring_read_file(dstring_struct* dstring, const char* file);
-dstring_struct* dstring_read_process_output(dstring_struct* dstring, FILE* process_output, int* process_exit_code);
-int dstring_write_file(dstring_struct* dstring, const char* file);
-int dstring_write_file_if_different(dstring_struct* dstring, const char* filename, int* did_write);
+darray_struct* darray_init_with_size(darray_struct*, size_t, size_t);
+darray_struct* darray_init(darray_struct*, size_t);
+void darray_free(darray_struct*);
+darray_struct* darray_increase_size_specific_amount(darray_struct*, size_t);
+darray_struct* darray_increase_size(darray_struct*);
+darray_struct* darray_append(darray_struct*, const void*);
+void* darray_get_elem(darray_struct*, size_t);
+darray_struct* darray_clone(darray_struct*);
+dstring_struct* dstring_init_with_size(dstring_struct*, size_t);
+dstring_struct* dstring_init(dstring_struct*);
+void dstring_free(dstring_struct*);
+void darray_of_dstrings_free(darray_struct*);
+dstring_struct* dstring_resize(dstring_struct*, size_t);
+dstring_struct* dstring_append(dstring_struct*, const char*);
+dstring_struct* dstring_append_printf(dstring_struct*, const char*, ...);
+void dstring_remove_num_chars_in_text(dstring_struct*, const char*);
+dstring_struct* dstring_read_file(dstring_struct*, const char*);
+dstring_struct* dstring_read_process_output(dstring_struct*, FILE*, int*);
+int dstring_write_file(dstring_struct*, const char*);
+int dstring_write_file_if_different(dstring_struct*, const char*, int*);
 int dstring_test();
 int darray_test();
-int dstring_try_load_file(dstring_struct* destination, dstring_struct* base_dir, const char* file, const char* filetype);
-void dstring_remove_trailing_newlines(dstring_struct* dstring);
-darray_struct* dstring_split_to_darray(dstring_struct* dstring, darray_struct* darray, char delimiter);
+int dstring_try_load_file(dstring_struct*, dstring_struct*, const char*, const char*);
+void dstring_remove_trailing_newlines(dstring_struct*);
+darray_struct* dstring_split_to_darray(dstring_struct*, darray_struct*, char);
 #endif
