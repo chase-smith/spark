@@ -24,7 +24,7 @@ Key features:
 - Assumes that the web server is configured to find .html files even if the extension isn't in the URL (ie links don't have the .html file extension)
 - Extensive error checking and handling is done; Spark is very unlikely to outright crash. If there's a problem generating your site, the combination of error messages it outputs should be enough to figure out what you did wrong (or, if it's a problem with Spark itself, what line it failed on).
   - Nothing will be generated if you have invalid files, though Spark assumes that the user is providing valid HTML and such.
-- Posts have footers generated that contain information about 
+- Posts have footers generated that contain the author, timestamps, tags, and series
 - Extremely fast
 
 I do intend on eventually adding in some scripts to make it so that all you have to do is have a blank CentOS server and run a couple of scripts to get a blog site up and running.
