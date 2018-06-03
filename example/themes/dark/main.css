@@ -1,0 +1,89 @@
+body {
+        font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-serif;
+	background-color: #171723;
+	color: #bbbbbb;
+}
+a:link {
+	color: #009900;
+}
+a:visited {
+	color: #0066cc;
+}
+h1 {
+	font-family: "Arial Black", Sans-serif;
+        font-size: 2.1em;
+	color: #dddddd;
+}
+h2 {
+        font-size: 1.75em;
+}
+h3 {
+        font-size: 1.5em;
+}
+h4 {
+        font-size: 1.25em;
+}
+
+p {
+        text-align: left;
+        font-size: 1.20em;
+}
+main {
+	margin: 0 auto;
+	max-width: 80ch;
+}
+main header {
+	text-align: center;
+}
+article header {
+        text-align: center;
+}
+article {
+        margin: 0 auto;
+        max-width: 80ch;
+}
+footer {
+        border-color: #3b0051;
+        border-top-style: solid;
+        border-width: 1px;
+        max-width: 100ch;
+        margin: 0 auto;
+}
+article footer {
+        border-color: #555555;
+        border-top-style: solid;
+        padding-bottom: 1ch;
+        padding-top: 1ch;
+        max-width: 70ch;
+}
+
+.leftfloat {
+        float: left;
+}
+.rightfloat {
+        float: right;
+}
+.nofloat {
+        float: none;
+}
+.s_p_reading {
+        text-align: left;
+}
+.flexcontainer {
+        display: flex;
+        justify-content: space-between;
+}
+/* Make it look good on mobile. */
+@media screen and (max-width: 600px) {
+        footer.postfooter {
+                flex-direction: column;
+        }
+}
+
+.nheader {
+        margin: 1ch;
+        padding-bottom: 1ch;
+}
+.pfooter {
+        padding-top: 1ch;
+}

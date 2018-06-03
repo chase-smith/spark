@@ -8,3 +8,10 @@ bin/*
 # Exclude example site
 example/
 example/*
+# Exclude configuration for demo site
+SPARKDEMO.conf
+SPARKDEMO.build
+
+# Exclude debugging files
+gmon.out
+callgrind*

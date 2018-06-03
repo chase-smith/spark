@@ -1,0 +1,84 @@
+div.codecontainer {
+	font-family: "Courier New", Monospace;
+	background-color: #e2e2e2;
+	margin: 1ch;
+	font-size: 1.15em;
+	border-radius: 5px;
+	border: 2px solid #d1d1d1;
+	padding-left: 1ch;
+}
+div.codecontainer pre code {
+	font-size: 1.15em;
+	white-space: pre-wrap;
+}
+@media screen and (max-device-width: 600px){
+  div.codecontainer {
+    text-size-adjust: 100%;
+  }
+}
+span.inlco {
+	font-family: "Courier New", Monospace;
+	color: #ff2a4e;
+	background-color: #e6e6e6;
+	border-radius: 3px;
+	border: 1px solid #d5d5d5;
+	font-size: 16px;
+	padding-left: 2px;
+	padding-right: 2px;
+}
+code span.c_keyword {
+	color: #660066;
+	font-weight: bold;
+}
+code span.c_bracket {
+        color: #997a00;
+	font-weight: bold;
+}
+code span.c_semi {
+	color: #663300;
+	font-weight: bold;
+}
+code span.c_function {
+	color: #669900;
+	font-weight: bold;
+}
+code span.c_string {
+	color: #cc6600;
+	font-weight: bold;
+}
+code span.c_comment {
+	color: #115511;
+	font-weight: bold;
+}
+code span.c_varname {
+	color: #000099;
+	font-weight: bold;
+}
+code span.c_parameter {
+	color: #000099;
+	font-weight: bold;
+}
+code span.c_type {
+        color: #3366ff;
+        font-weight: bold;
+}
+code span.c_operator {
+	color: #990033;
+        font-weight: bold;
+}
+code span.c_comma {
+	color: #997a00;
+        font-weight: bold;
+}
+code span.c_number {
+        color: #009933;
+        font-weight: bold;
+}
+code span.c_property {
+	color: #999900;
+	font-weight: bold;
+}
+code span.c_boolean {
+	color: #00997d;
+	font-weight: bold;
+}
