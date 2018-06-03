@@ -1,0 +1,10 @@
+# No vim files
+*.swp
+
+# Exclude output directory
+bin/
+bin/*
+
+# Exclude example site
+example/
+example/*

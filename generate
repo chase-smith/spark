@@ -1,0 +1,11 @@
+#!/bin/bash
+cd "${BASH_SOURCE%/*}" || exit
+if [ ! -d bin ]; then
+	echo "Making bin/"
+	mkdir bin
+	if test $? -ne 0; then
+		echo "Error: couldn't make bin/ dir"
+		exit 1
+	fi
+fi
+make
