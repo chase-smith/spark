@@ -41,26 +41,23 @@ site_content_struct* site_content_init(site_content_struct* site_content) {
 int site_content_add_post_to_tag(site_content_struct* site_content, post_struct* post, const char* tag) {
 	tag_posts_struct* tag_posts = find_tag_posts_by_tag(site_content, tag);
 	if(tag_posts == NULL) {
-		tag_posts = malloc(sizeof(tag_posts_struct));
-		if(tag_posts == NULL) {
-			fprintf(stderr, "Error adding post to tag, malloc error\n");
-			return 0;
-		}
+		// Doing this saves a malloc and free. darray_append copies the
+		// contents of what it's given, so there's no danger in giving it
+		// a local variable.
+		tag_posts_struct tag_posts_s;
+		tag_posts = &tag_posts_s;
 		if(!tag_posts_init(tag_posts)) {
 			fprintf(stderr, "Error adding post to tag, tag_posts_init error\n");
-			free(tag_posts);
 			return 0;
 		}
 		if(!dstring_append(&tag_posts->tag, tag)) {
 			fprintf(stderr, "Error adding post to tag, dstring append error\n");
 			tag_posts_free(tag_posts);
-			free(tag_posts);
 			return 0;
 		}
 		if(!darray_append(&site_content->tags, tag_posts)) {
 			fprintf(stderr, "Error adding post to tag, couldn't add tag_posts to tags\n");
 			tag_posts_free(tag_posts);
-			free(tag_posts);
 			return 0;
 		}
 
