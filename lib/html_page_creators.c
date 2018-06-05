@@ -139,6 +139,7 @@ int create_page_wrapper(site_content_struct* site_content, dstring_struct* page_
 	}
 }
 int create_misc_page(site_content_struct* site_content, misc_page_struct* misc_page) {
+	// The URL path is derived from the filename by stripping out the file extension
 	char* url_path = strdup(misc_page->filename.str);
 	if(url_path == NULL) {
 		fprintf(stderr, "Error mallocing space for url_path\n");
