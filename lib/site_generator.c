@@ -67,31 +67,32 @@ int generate_tags(site_content_struct* site_content) {
 			fprintf(stderr, "Error generating tags, misc_page init error\n");
 			return 0;
 		}
-		if(!dstring_append(&tag_page.filename, "tags/")
-			|| !dstring_append(&tag_page.filename, tag_posts->tag.str)
-			|| !dstring_append(&tag_page.filename, ".html")
-			|| !dstring_append(&tag_page.title, tag_posts->tag.str)
-			|| !dstring_append(&tag_page.title, " tag listing")
+		// Just a small note: The description is copied from the title.
+		// I'm calling this out because I had tried moving the description append
+		// to the top, to make things line up better, and was initially confused why
+		// the description was blank.
+                if(!dstring_append_printf(&tag_page.filename, "tags/%s.html", tag_posts->tag.str)
+			|| !dstring_append_printf(&tag_page.title, "%s tag listing", tag_posts->tag.str)
 			|| !dstring_append(&tag_page.description, tag_page.title.str)
-			|| !dstring_append(&tag_page.content, "<header><h1>Tag: ")
-			|| !dstring_append(&tag_page.content, tag_posts->tag.str)
-			|| !dstring_append(&tag_page.content, "</h1></header>\n<section>\n")) {
+			|| !dstring_append_printf(&tag_page.content, "<header><h1>Tag: %s</h1></header>\n<section>\n", tag_posts->tag.str)) {
 			fprintf(stderr, "Error generating tags, dstring append error\n");
 			misc_page_free(&tag_page);
 			return 0;
 		}
 		for(size_t j = 0; j < tag_posts->posts.length; j++) {
-			
+			// tag_posts has an array of pointers to posts.
+			// darray_get_elem returns a pointer to the _element_.
+			// Thus, the return value is a post_struct**, and it must
+			// be dereferenced to get the pointer to the post.
 			post_struct* post = *(((post_struct**) darray_get_elem(&tag_posts->posts, j)));
-			if(!dstring_append(&tag_page.content, "<div><h3><a href='/posts/")
-				|| !dstring_append(&tag_page.content, post->folder_name.str)
-				|| !dstring_append(&tag_page.content, "'>")
-				|| !dstring_append(&tag_page.content, post->title.str)
-				|| !dstring_append(&tag_page.content, "</a></h3>\n")
-				|| !dstring_append(&tag_page.content, "<p>")
-				|| !dstring_append(&tag_page.content, post->long_description.str)
-				|| !dstring_append(&tag_page.content, "</p>\n")
-				|| !dstring_append(&tag_page.content, "</div>\n")) {
+
+			// Split this one up onto multiple lines to make it more readable because
+			// it is so long.
+			if(!dstring_append_printf(&tag_page.content,
+						"<div><h3><a href='/posts/%s'>%s</a></h3>\n<p>%s</p>\n</div>\n",
+						post->folder_name.str,
+						post->title.str,
+						post->long_description.str)) {
 				fprintf(stderr, "Error generating tags, post dstring append error\n");
 				misc_page_free(&tag_page);
 				return 0;
@@ -128,13 +129,11 @@ int generate_tags(site_content_struct* site_content) {
 	}
 	for(size_t i = 0; i < site_content->tags.length; i++) {
 		tag_posts_struct* tag_posts = (tag_posts_struct*) darray_get_elem(&site_content->tags, i);
-		if(!dstring_append(&tags_page.content, "<div><a href='/tags/")
-			|| !dstring_append(&tags_page.content, tag_posts->tag.str)
-			|| !dstring_append(&tags_page.content, "'>")
-			|| !dstring_append(&tags_page.content, tag_posts->tag.str)
-			|| !dstring_append(&tags_page.content, "</a> (")
-			|| !dstring_append_printf(&tags_page.content, "%d", tag_posts->posts.length)
-			|| !dstring_append(&tags_page.content, ")</div>\n")) {
+		if(!dstring_append_printf(&tags_page.content,
+					"<div><a href='/tags/%s'>%s</a> (%d)</div>\n",
+					tag_posts->tag.str,
+					tag_posts->tag.str,
+					tag_posts->posts.length)) {
 			fprintf(stderr, "Error generating tags, dstring append error\n");
 			misc_page_free(&tags_page);
 			return 0;
@@ -154,6 +153,7 @@ int generate_tags(site_content_struct* site_content) {
 	return 1;
 	
 }
+// This is the sort function for the 'new and updated posts' list.
 int updated_post_sort_compare(const void* post_a, const void* post_b) {
 	time_t post_a_time = ((post_struct*)post_a)->written_date_time > ((post_struct*)post_a)->updated_at_time ? ((post_struct*)post_a)->written_date_time : ((post_struct*)post_a)->updated_at_time;
 	time_t post_b_time = ((post_struct*)post_b)->written_date_time > ((post_struct*)post_b)->updated_at_time ? ((post_struct*)post_b)->written_date_time : ((post_struct*)post_b)->updated_at_time;
@@ -175,10 +175,7 @@ int generate_index_page(site_content_struct* site_content, misc_page_struct* ind
 	if(!dstring_append(&index_page.filename, "index.html")
 		|| !dstring_append(&index_page.title, index_page_original->title.str)
 		|| !dstring_append(&index_page.description, index_page_original->description.str)
-		|| !dstring_append(&index_page.content, "<article>\n")
-		|| !dstring_append(&index_page.content, index_page_original->content.str)
-		|| !dstring_append(&index_page.content, "<section>\n")
-		|| !dstring_append(&index_page.content, "<h2>New and updated posts</h2>\n")) {
+		|| !dstring_append_printf(&index_page.content, "<article>\n%s<section>\n<h2>New and updated posts</h2>\n", index_page_original->content.str)) {
 		fprintf(stderr, "Error generating index page, dstring append error\n");
 		misc_page_free(&index_page);
 		darray_free(new_posts);
@@ -192,16 +189,12 @@ int generate_index_page(site_content_struct* site_content, misc_page_struct* ind
 		post_struct* post = (post_struct*) darray_get_elem(new_posts, i);
 		if(!post->can_publish) continue;
 		if(num_shown >= SHOW_X_NEW_POSTS) break;
-		if(!dstring_append(&index_page.content, "<div><h3><a href=\"/posts/")
-			|| !dstring_append(&index_page.content, post->folder_name.str)
-			|| !dstring_append(&index_page.content, "\">")
-			|| !dstring_append(&index_page.content, post->title.str)
-			|| !dstring_append(&index_page.content, "</a></h3>\n<p>")
-			|| !dstring_append(&index_page.content, post->long_description.str)
-			|| !dstring_append(&index_page.content, "</p>\n<ul>\n")
-			|| !dstring_append(&index_page.content, "<li>Written: ")
-			|| !dstring_append(&index_page.content, post->written_date.str)
-			|| !dstring_append(&index_page.content, "</li>\n")) {
+		if(!dstring_append_printf(&index_page.content,
+					"<div><h3><a href=\"/posts/%s\">%s</a></h3>\n<p>%s</p>\n<ul>\n<li>Written: %s</li>\n",
+					post->folder_name.str,
+					post->title.str,
+					post->long_description.str,
+					post->written_date.str)) {
 			fprintf(stderr, "Error generating index page, dstring append error\n");
 			misc_page_free(&index_page);
 			darray_free(new_posts);	
@@ -209,9 +202,9 @@ int generate_index_page(site_content_struct* site_content, misc_page_struct* ind
 			return 0;
 		}
 		if(post->updated_at.length > 0) {
-			if(!dstring_append(&index_page.content, "<li>Updated at: ")
-				|| !dstring_append(&index_page.content, post->updated_at.str)
-				|| !dstring_append(&index_page.content, "</li>\n")) {
+			if(!dstring_append_printf(&index_page.content,
+						"<li>Updated at: %s</li>\n",
+						post->updated_at.str)) {
 				fprintf(stderr, "Error generating index page, dstring append error\n");
 				misc_page_free(&index_page);
 				darray_free(new_posts);
@@ -219,12 +212,10 @@ int generate_index_page(site_content_struct* site_content, misc_page_struct* ind
 				return 0;
 			}
 		}
-		if(!dstring_append(&index_page.content, "<li>Series: <a href='/series/")
-			|| !dstring_append(&index_page.content, post->series_name.str)
-			|| !dstring_append(&index_page.content, "'>")
-			|| !dstring_append(&index_page.content, post->series->title.str)
-			|| !dstring_append(&index_page.content, "</a></li>\n")
-			|| !dstring_append(&index_page.content, "</ul>\n</div>\n")) {
+		if(!dstring_append_printf(&index_page.content,
+					"<li>Series: <a href='/series/%s'>%s</a></li>\n</ul>\n</div>\n",
+					post->series_name.str,
+					post->series->title.str)) {
 			fprintf(stderr, "Error generating index page, dstring append error\n");
 			misc_page_free(&index_page);
 			darray_free(new_posts);
@@ -317,35 +308,20 @@ int generate_series(site_content_struct* site_content) {
 			misc_page_free(&series_listing_page);
 			return 0;
 		}
-		if(!dstring_append(&series_listing_page.content, "<section>\n")
-			|| !dstring_append(&series_listing_page.content, "<h3><a href=\"/series/")
-			|| !dstring_append(&series_listing_page.content, series->folder_name.str)
-			|| !dstring_append(&series_listing_page.content, "\">")
-			|| !dstring_append(&series_listing_page.content, series->title.str)
-			|| !dstring_append(&series_listing_page.content, "</a></h3>\n")
-			|| !dstring_append(&series_listing_page.content, "<p>")
-			|| !dstring_append(&series_listing_page.content, series->short_description.str)
-			|| !dstring_append(&series_listing_page.content, "</p>\n")
-			|| !dstring_append(&series_listing_page.content, "</section>\n")) {
+		if(!dstring_append_printf(&series_listing_page.content,
+					"<section>\n<h3><a href=\"/series/%s\">%s</a></h3>\n<p>%s</p>\n</section>\n",
+					series->folder_name.str,
+					series->title.str,
+					series->short_description.str)) {
 			fprintf(stderr, "Error generating series, error appending to series listing page\n");
 			misc_page_free(&series_listing_page);
 			misc_page_free(&series_page);
 			return 0;
 		}
-		if(!dstring_append(&series_page.filename, "series/")
-			|| !dstring_append(&series_page.filename, series->folder_name.str)
-			|| !dstring_append(&series_page.filename, "/index.html")
-			|| !dstring_append(&series_page.description, "Landing page for ")
-			|| !dstring_append(&series_page.description, series->title.str)
-			|| !dstring_append(&series_page.title, series->title.str)
-			|| !dstring_append(&series_page.title, " listing")
-			|| !dstring_append(&series_page.content, "<header><h1>")
-			|| !dstring_append(&series_page.content, series->title.str)
-			|| !dstring_append(&series_page.content, "</h1></header>\n")
-			|| !dstring_append(&series_page.content, "<p>")
-			|| !dstring_append(&series_page.content, series->landing_desc_html.str)
-			|| !dstring_append(&series_page.content, "</p><br />\n")
-			|| !dstring_append(&series_page.content, "<section>\n")) {
+		if(!dstring_append_printf(&series_page.filename, "series/%s/index.html", series->folder_name.str)
+			|| !dstring_append_printf(&series_page.description, "Landing page for %s", series->title.str)
+			|| !dstring_append_printf(&series_page.title, "%s listing", series->title.str)
+			|| !dstring_append_printf(&series_page.content, "<header><h1>%s</h1></header>\n<p>%s</p><br />\n<section>\n", series->title.str, series->landing_desc_html.str)) {
 			fprintf(stderr, "Error generating series, dstring_append error\n");
 			misc_page_free(&series_page);
 			misc_page_free(&series_listing_page);
@@ -353,14 +329,11 @@ int generate_series(site_content_struct* site_content) {
 		}
 		for(size_t j = 0; j < series->posts.length; j++) {
 			post_struct* post = *(post_struct**) darray_get_elem(&series->posts, j);
-			if(!dstring_append(&series_page.content, "<div><h3><a href=\"/posts/")
-				|| !dstring_append(&series_page.content, post->folder_name.str)
-				|| !dstring_append(&series_page.content, "\">")
-				|| !dstring_append(&series_page.content, post->title.str)
-				|| !dstring_append(&series_page.content, "</a></h3>\n")
-				|| !dstring_append(&series_page.content, "<p>\n")
-				|| !dstring_append(&series_page.content, post->long_description.str)
-				|| !dstring_append(&series_page.content, "</p></div>\n")) {
+			if(!dstring_append_printf(&series_page.content,
+						"<div><h3><a href=\"/posts/%s\">%s</a></h3>\n<p>\n%s</p></div>\n",
+						post->folder_name.str,
+						post->title.str,
+						post->long_description.str)) {
 				fprintf(stderr, "Error generating series, post dstring_append error\n");
 				misc_page_free(&series_page);
 				misc_page_free(&series_listing_page);
@@ -414,7 +387,7 @@ int generate_sitemap(site_content_struct* site_content) {
 		misc_page_free(&sitemap);
 		return 0;
 	}
-	
+	// TODO: Practically identical to generate_series
 	for(size_t i = 0; i < site_content->series.length; i++) {
 		series_struct* series = (series_struct*) darray_get_elem(&site_content->series, i);
 		if(!dstring_append(&sitemap.content, "<header><h2>")
@@ -525,21 +498,12 @@ int generate_main_rss(configuration_struct* configuration, site_content_struct* 
 		fprintf(stderr, "Error generating RSS, couldn't init rss dstring\n");
 		return 0;
 	}
-	if(!dstring_append(&rss_feed, "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n")
-		|| !dstring_append(&rss_feed, "<rss version=\"2.0\">\n")
-		|| !dstring_append(&rss_feed, "<channel>\n")
-		|| !dstring_append(&rss_feed, "<lastBuildDate>")
-		|| !dstring_append(&rss_feed, buff)
-		|| !dstring_append(&rss_feed, "</lastBuildDate>\n")
-		|| !dstring_append(&rss_feed, "<title>")
-		|| !dstring_append(&rss_feed, configuration->bright_host)
-		|| !dstring_append(&rss_feed, " posts</title>\n")
-		|| !dstring_append(&rss_feed, "<link>https://")
-		|| !dstring_append(&rss_feed, configuration->bright_host)
-		|| !dstring_append(&rss_feed, "/</link>\n")
-		|| !dstring_append(&rss_feed, "<description>")
-		|| !dstring_append(&rss_feed, configuration->rss_description)
-		|| !dstring_append(&rss_feed, "</description>\n")) {
+	if(!dstring_append_printf(&rss_feed,
+				"<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<rss version=\"2.0\">\n<channel>\n<lastBuildDate>%s</lastBuildDate>\n<title>%s posts</title>\n<link>https://%s/</link>\n<description>%s</description>\n",
+				buff,
+				configuration->bright_host,
+				configuration->bright_host,
+				configuration->rss_description)) {
 		fprintf(stderr, "Error generating RSS, dstring append error\n");
 		dstring_free(&rss_feed);
 		return 0;
@@ -560,32 +524,20 @@ int generate_main_rss(configuration_struct* configuration, site_content_struct* 
 			return 0;
 		}
 		if(!post->can_publish) continue;
-		if(!dstring_append(&rss_feed, "<item>\n")
-			|| !dstring_append(&rss_feed, "<title>")
-			|| !dstring_append(&rss_feed, post->title.str)
-			|| !dstring_append(&rss_feed, "</title>\n")
-			|| !dstring_append(&rss_feed, "<category>")
-			|| !dstring_append(&rss_feed, post->series->title.str)
-			|| !dstring_append(&rss_feed, "</category>\n")
-			|| !dstring_append(&rss_feed, "<pubDate>")
-			|| !dstring_append(&rss_feed, post_buff)
-			|| !dstring_append(&rss_feed, "</pubDate>\n")
-			|| !dstring_append(&rss_feed, "<link>https://")
-			|| !dstring_append(&rss_feed, configuration->bright_host)
-			|| !dstring_append(&rss_feed, "/posts/")
-			|| !dstring_append(&rss_feed, post->folder_name.str)
-			|| !dstring_append(&rss_feed, "</link>\n")
-			|| !dstring_append(&rss_feed, "<description>")
-			|| !dstring_append(&rss_feed, post->long_description.str)
-			|| !dstring_append(&rss_feed, "</description>\n")
-			|| !dstring_append(&rss_feed, "</item>\n")) {
+		if(!dstring_append_printf(&rss_feed,
+					"<item>\n<title>%s</title>\n<category>%s</category>\n<pubDate>%s</pubDate>\n<link>https://%s/posts/%s</link>\n<description>%s</description>\n</item>\n",
+					post->title.str,
+					post->series->title.str,
+					post_buff,
+					configuration->bright_host,
+					post->folder_name.str,
+					post->long_description.str)) {
 			fprintf(stderr, "Error generating RSS, dstring append error\n");
 			dstring_free(&rss_feed);
 			return 0;
 		}
 	}
-	if(!dstring_append(&rss_feed, "</channel>\n")
-		|| !dstring_append(&rss_feed, "</rss>\n")) {
+	if(!dstring_append(&rss_feed, "</channel>\n</rss>\n")) {
 		fprintf(stderr, "Error generating RSS, dstring append error\n");
 		dstring_free(&rss_feed);
 		return 0;

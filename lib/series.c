@@ -21,29 +21,25 @@ series_struct* series_load(series_struct* series, dstring_struct* base_dir) {
 		fprintf(stderr, "Error loading series, folder_name dstring append error\n");
 		return NULL;
 	}
-	
-	if(!dstring_try_load_file(&series->landing_desc_html, base_dir, "/landing-desc.html", "series")) {
-		return NULL;
-	}
-	if(!dstring_try_load_file(&series->short_description, base_dir, "/short-description", "series")) {
-		return NULL;
-	}
-	dstring_remove_trailing_newlines(&series->short_description);
-	if(!dstring_try_load_file(&series->title, base_dir, "/title", "series")) {
-		return NULL;
-	}
-	dstring_remove_trailing_newlines(&series->title);
 	dstring_struct order_string;
 	if(!dstring_init(&order_string)) {
 		fprintf(stderr, "Error loading series, dstring init error\n");
 		return NULL;
 	}
-	if(!dstring_try_load_file(&order_string, base_dir, "/order", "series")) {
+	
+	if(!dstring_try_load_file(&series->landing_desc_html, base_dir, "/landing-desc.html", "series")
+		|| !dstring_try_load_file(&series->short_description, base_dir, "/short-description", "series")
+		|| !dstring_try_load_file(&series->title, base_dir, "/title", "series")
+		|| !dstring_try_load_file(&order_string, base_dir, "/order", "series")) {
 		dstring_free(&order_string);
 		return NULL;
 	}
+	dstring_remove_trailing_newlines(&series->short_description);
+	dstring_remove_trailing_newlines(&series->title);
+
 	series->order = atoi(order_string.str);
 	dstring_free(&order_string);
+
 	return series;
 }
 series_struct* series_init(series_struct* series) {
