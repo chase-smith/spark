@@ -10,6 +10,7 @@ int try_get_config_value(int argc, char* argv[], const char* config_name, void* 
 int load_configuration(configuration_struct* configuration, const char* config_file) {
 	if(!dstring_init(&configuration->raw_config_file)) {
 		fprintf(stderr, "Unable to initialize dstring for reading config file");
+		return 0;
 	}
 	if(!dstring_read_file(&configuration->raw_config_file, config_file)) {
 		fprintf(stderr, "Error loading config file\n");
