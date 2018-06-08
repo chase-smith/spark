@@ -15,7 +15,7 @@ void site_content_free(site_content_struct* site_content) {
 	}
 	darray_free(&site_content->series);
 	for(size_t i = 0; i < site_content->posts.length; i++) {
-		post_free(&((post_struct*)site_content->posts.array)[i]);
+		post_free(post_get_from_darray(&site_content->posts, i));
 	}
 	darray_free(&site_content->posts);
 	for(size_t i = 0; i < site_content->tags.length; i++) {
@@ -82,7 +82,8 @@ int site_content_add_post_to_tags(site_content_struct* site_content, post_struct
 }
 int site_content_setup_tags(site_content_struct* site_content) {
 	for(size_t i = 0; i < site_content->posts.length; i++) {
-		if(!site_content_add_post_to_tags(site_content, &((post_struct*)site_content->posts.array)[i])) {
+		post_struct* post = post_get_from_darray(&site_content->posts, i);
+		if(!site_content_add_post_to_tags(site_content, post)) {
 			// Error printing is done in above function
 			return 0;
 		}
@@ -91,8 +92,9 @@ int site_content_setup_tags(site_content_struct* site_content) {
 }
 post_struct* find_post_by_folder_name(site_content_struct* site_content, const char* folder_name) {
 	for(size_t i = 0; i < site_content->posts.length; i++) {
-		if(!strcmp(folder_name, ((post_struct*)site_content->posts.array)[i].folder_name.str)) {
-			return &((post_struct*)site_content->posts.array)[i];
+		post_struct* post = post_get_from_darray(&site_content->posts, i);
+		if(!strcmp(folder_name, post->folder_name.str)) {
+			return post;
 		}
 	}
 	return NULL;
@@ -124,7 +126,7 @@ tag_posts_struct* find_tag_posts_by_tag(site_content_struct* site_content, const
 // Validate post names, series names, etc. Sets up links for series and posts
 int validate_posts(site_content_struct* site_content) {
 	for(size_t i = 0; i < site_content->posts.length; i++) {
-		post_struct* post = &((post_struct*)site_content->posts.array)[i];
+		post_struct* post = post_get_from_darray(&site_content->posts, i);
 		const char** suggested_prev_reading_names_strs = (const char**) post->suggested_prev_reading_names.array;
 		for(size_t j = 0; j < post->suggested_prev_reading_names.length; j++) {
 			const char* prev_post_name = suggested_prev_reading_names_strs[j];

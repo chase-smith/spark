@@ -76,12 +76,7 @@ int generate_tags(site_content_struct* site_content) {
 			return 0;
 		}
 		for(size_t j = 0; j < tag_posts->posts.length; j++) {
-			// tag_posts has an array of pointers to posts.
-			// darray_get_elem returns a pointer to the _element_.
-			// Thus, the return value is a post_struct**, and it must
-			// be dereferenced to get the pointer to the post.
-			post_struct* post = *(((post_struct**) darray_get_elem(&tag_posts->posts, j)));
-
+			post_struct* post = post_get_from_darray_of_post_pointers(&tag_posts->posts, j);
 			// Split this one up onto multiple lines to make it more readable because
 			// it is so long.
 			if(!dstring_append_printf(&tag_page.content,
@@ -178,7 +173,7 @@ int generate_index_page(site_content_struct* site_content, misc_page_struct* ind
 	const int SHOW_X_NEW_POSTS = 5;
 	int num_shown = 0;
 	for(size_t i = 0; i < new_posts->length; i++) {
-		post_struct* post = (post_struct*) darray_get_elem(new_posts, i);
+		post_struct* post = post_get_from_darray(new_posts, i);
 		if(!post->can_publish) continue;
 		if(num_shown >= SHOW_X_NEW_POSTS) break;
 		if(!dstring_append_printf(&index_page.content,
@@ -256,7 +251,7 @@ int generate_misc_pages(site_content_struct* site_content) {
 int generate_posts(site_content_struct* site_content) {
 	// TODO: Remove old posts
 	for(size_t i = 0; i < site_content->posts.length; i++) {
-		post_struct* post = (post_struct*) darray_get_elem(&site_content->posts, i);
+		post_struct* post = post_get_from_darray(&site_content->posts, i);
 		if(!create_post_page(site_content, post)) {
 			fprintf(stderr, "Error generating post %s\n", post->title.str);
 			return 0;
@@ -315,7 +310,7 @@ int generate_series(site_content_struct* site_content) {
 			return 0;
 		}
 		for(size_t j = 0; j < series->posts.length; j++) {
-			post_struct* post = *(post_struct**) darray_get_elem(&series->posts, j);
+			post_struct* post = post_get_from_darray_of_post_pointers(&series->posts, j);
 			if(!dstring_append_printf(&series_page.content,
 						"<div><h3><a href=\"/posts/%s\">%s</a></h3>\n<p>\n%s</p></div>\n",
 						post->folder_name.str,
@@ -387,7 +382,7 @@ int generate_sitemap(site_content_struct* site_content) {
 			return 0;
 		}
 		for(size_t j = 0; j < series->posts.length; j++) {
-			post_struct* post = *(post_struct**) darray_get_elem(&series->posts, j);
+			post_struct* post = post_get_from_darray_of_post_pointers(&series->posts, j);
 			if(!dstring_append(&sitemap.content, "<div><h3><a href=\"/posts/")
 				|| !dstring_append(&sitemap.content, post->folder_name.str)
 				|| !dstring_append(&sitemap.content, "\">")
@@ -495,7 +490,7 @@ int generate_main_rss(configuration_struct* configuration, site_content_struct* 
 		return 0;
 	}
 	for(size_t i = 0; i < site_content->posts.length; i++) {
-		post_struct* post = (post_struct*) darray_get_elem(&site_content->posts, i);
+		post_struct* post = post_get_from_darray(&site_content->posts, i);
 		if(!post->can_publish) continue;
 		struct tm* post_time_struct = gmtime(&post->written_date_time);
 		if(post_time_struct == NULL) {

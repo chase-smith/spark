@@ -281,17 +281,17 @@ int load_post_dates(configuration_struct* configuration, site_content_struct* si
 	}
 	int had_error = 0;
 	size_t num_dates_written = 1;
-	post_struct* posts = (post_struct*) site_content->posts.array;
 	for(size_t i = 0; i < site_content->posts.length; i++) {
-		if(!dstring_append(&out_dates, posts[i].written_date.str)
+		post_struct* post = post_get_from_darray(&site_content->posts, i);
+		if(!dstring_append(&out_dates, post->written_date.str)
 			|| !dstring_append(&out_dates, "\n")) {
 			fprintf(stderr, "Error appending written_date\n");
 			had_error = 1;
 			break;
 		}
 		num_dates_written++;
-		if(posts[i].publish_after.length > 0) {
-			if(!dstring_append(&out_dates, posts[i].publish_after.str)
+		if(post->publish_after.length > 0) {
+			if(!dstring_append(&out_dates, post->publish_after.str)
 				|| !dstring_append(&out_dates, "\n")) {
 				fprintf(stderr, "Error appending publish_after\n");
 				had_error = 1;
@@ -299,8 +299,8 @@ int load_post_dates(configuration_struct* configuration, site_content_struct* si
 			}
 			num_dates_written++;
 		}
-		if(posts[i].updated_at.length > 0) {
-			if(!dstring_append(&out_dates, posts[i].updated_at.str)
+		if(post->updated_at.length > 0) {
+			if(!dstring_append(&out_dates, post->updated_at.str)
 				|| !dstring_append(&out_dates, "\n")) {
 				fprintf(stderr, "Error appending updated_at\n");
 				had_error = 1;
@@ -380,34 +380,35 @@ int load_post_dates(configuration_struct* configuration, site_content_struct* si
 	// if there are errors from the exit code.
 	for(size_t i = 0; i < site_content->posts.length; i++) {
 		time_t written_date_time = read_time_from_str(read_dates_strs[date_index++]);
+		post_struct* post = post_get_from_darray(&site_content->posts, i);
 		if(!written_date_time) {
-			fprintf(stderr, "Error, written-date %s for post %s invalid.\n", posts[i].written_date.str, posts[i].folder_name.str);
+			fprintf(stderr, "Error, written-date %s for post %s invalid.\n", post->written_date.str, post->folder_name.str);
 		} else {
-			((post_struct*)site_content->posts.array)[i].written_date_time = written_date_time;
+			post->written_date_time = written_date_time;
 		}
-		if(posts[i].publish_after.length > 0) {
+		if(post->publish_after.length > 0) {
 			time_t publish_after_time = read_time_from_str(read_dates_strs[date_index++]);
 			if(!publish_after_time) {
-				fprintf(stderr, "Error, publish-after time %s for post %s invalid.\n", posts[i].publish_after.str, posts[i].folder_name.str);
+				fprintf(stderr, "Error, publish-after time %s for post %s invalid.\n", post->publish_after.str, post->folder_name.str);
 			} else {
-				((post_struct*)site_content->posts.array)[i].publish_after_time = publish_after_time;
-				if(posts[i].publish_when_ready) {
+				post->publish_after_time = publish_after_time;
+				if(post->publish_when_ready) {
 					if(publish_after_time <= now_time) {
-						((post_struct*)site_content->posts.array)[i].can_publish = 1;
+						post->can_publish = 1;
 					}
 				}
 			}
 		} else {
-			if(posts[i].publish_when_ready) {
-				((post_struct*)site_content->posts.array)[i].can_publish = 1;
+			if(post->publish_when_ready) {
+				post->can_publish = 1;
 			}
 		}
-		if(posts[i].updated_at.length > 0) {
+		if(post->updated_at.length > 0) {
 			time_t updated_at_time = read_time_from_str(read_dates_strs[date_index++]);
 			if(!updated_at_time) {
-				fprintf(stderr, "Error, updated-at time %s for post %s invalid.\n", posts[i].updated_at.str, posts[i].folder_name.str);
+				fprintf(stderr, "Error, updated-at time %s for post %s invalid.\n", post->updated_at.str, post->folder_name.str);
 			} else {
-				((post_struct*)site_content->posts.array)[i].updated_at_time = updated_at_time;
+				post->updated_at_time = updated_at_time;
 			}
 		}
 	}
@@ -489,7 +490,8 @@ int load_posts(configuration_struct* configuration, site_content_struct* site_co
 	}
 	if(had_error) {
 		for(size_t i = 0; i < site_content->posts.length; i++) {
-			post_free(&((post_struct*)site_content->posts.array)[i]);
+			post_struct* post = post_get_from_darray(&site_content->posts, i);
+			post_free(post);
 		}
 	}
 	dstring_free(&base_dir);

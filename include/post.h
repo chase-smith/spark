@@ -37,5 +37,13 @@ typedef struct post_struct {
 void post_free(post_struct*);
 void post_init(post_struct*);
 void post_print_debug(post_struct*);
+// darray should be a darray of post_struct's
+static inline post_struct* post_get_from_darray(darray_struct* darray, size_t index) {
+	return (post_struct*) darray_get_elem(darray, index);
+}
+// darray should be a darray of post_struct*'s
+static inline post_struct* post_get_from_darray_of_post_pointers(darray_struct* darray, size_t index) {
+	return *((post_struct**) darray_get_elem(darray, index));
+}
 post_struct* post_load(post_struct*, dstring_struct*, const char*, int*);
 #endif
