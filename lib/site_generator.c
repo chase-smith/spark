@@ -496,6 +496,7 @@ int generate_main_rss(configuration_struct* configuration, site_content_struct* 
 	}
 	for(size_t i = 0; i < site_content->posts.length; i++) {
 		post_struct* post = (post_struct*) darray_get_elem(&site_content->posts, i);
+		if(!post->can_publish) continue;
 		struct tm* post_time_struct = gmtime(&post->written_date_time);
 		if(post_time_struct == NULL) {
 			fprintf(stderr, "Error generating RSS, couldn't get post time\n");
@@ -509,7 +510,6 @@ int generate_main_rss(configuration_struct* configuration, site_content_struct* 
 			dstring_free(&rss_feed);
 			return 0;
 		}
-		if(!post->can_publish) continue;
 		if(!dstring_append_printf(&rss_feed,
 					"<item>\n<title>%s</title>\n<category>%s</category>\n<pubDate>%s</pubDate>\n<link>https://%s/posts/%s</link>\n<description>%s</description>\n</item>\n",
 					post->title.str,
