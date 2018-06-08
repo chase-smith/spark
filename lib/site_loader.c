@@ -122,7 +122,7 @@ int load_series(configuration_struct* configuration, site_content_struct* site_c
 			had_error = 1;
 			break;
 		}
-		if(!series_load(&tmp_series_entry, &base_dir)) {
+		if(!series_load(&tmp_series_entry, &base_dir, dir_ent->d_name)) {
 			fprintf(stderr, "Warning, series folder %s doesn't contain a valid series. Skipping\n", dir_ent->d_name);
 			dstring_remove_num_chars_in_text(&base_dir, dir_ent->d_name);
 			series_free(&tmp_series_entry);
@@ -505,7 +505,7 @@ int load_posts(configuration_struct* configuration, site_content_struct* site_co
 			break;
 		}
 		int generate_flag_missing = 0;
-		if(!post_load(&tmp_post_entry, &base_dir, &generate_flag_missing) && generate_flag_missing) {
+		if(!post_load(&tmp_post_entry, &base_dir, dir_ent->d_name, &generate_flag_missing) && generate_flag_missing) {
 			fprintf(stderr, "Skipping post %s because generate flag is missing\n", dir_ent->d_name);
 			dstring_remove_num_chars_in_text(&base_dir, dir_ent->d_name);
 			post_free(&tmp_post_entry);

@@ -84,7 +84,7 @@ void post_print_debug(post_struct* post) {
 // not a critical failure, it should be ignored), and 0 if the post failed
 // to be loaded due to a critical failure.
 // base_dir, as always, shouldn't have a trailing slash.
-post_struct* post_load(post_struct* post, dstring_struct* base_dir, int* generate_flag_missing) {
+post_struct* post_load(post_struct* post, dstring_struct* base_dir, const char* folder_name, int* generate_flag_missing) {
 	(*generate_flag_missing) = 0;
 	// First, check for the existence of the generate flag.
 	if(!check_if_file_exists(base_dir, "/generate-post")) {
@@ -96,14 +96,6 @@ post_struct* post_load(post_struct* post, dstring_struct* base_dir, int* generat
 		fprintf(stderr, "Can't load post, no base directory\n");
 		return NULL;
 	}
-	// Get the folder name
-	char* folder_name = &(base_dir->str[base_dir->length - 1]);
-	size_t folder_name_length = 1;
-	while(*folder_name != '/' && folder_name_length < base_dir->length) {
-		folder_name--;
-		folder_name_length++;
-	}
-	++folder_name;
 	if(!dstring_append(&post->folder_name, folder_name)) {
 		fprintf(stderr, "Error loading post, folder_name dstring append error\n");
 		return NULL;

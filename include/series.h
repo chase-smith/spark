@@ -10,6 +10,6 @@ typedef struct series_struct {
 	darray_struct posts;
 } series_struct;
 void series_free(series_struct*);
-series_struct* series_load(series_struct*, dstring_struct*);
+series_struct* series_load(series_struct*, dstring_struct*, const char*);
 series_struct* series_init(series_struct*);
 #endif

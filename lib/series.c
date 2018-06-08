@@ -8,15 +8,7 @@ void series_free(series_struct* series) {
 	dstring_free(&series->title);
 	darray_free(&series->posts);
 }
-series_struct* series_load(series_struct* series, dstring_struct* base_dir) {
-	// TODO: This is identical to what is in post_load
-	char* folder_name = &(base_dir->str[base_dir->length - 1]);
-	size_t folder_name_length = 1;
-	while(*folder_name != '/' && folder_name_length < base_dir->length) {
-		folder_name--;
-		folder_name_length++;
-	}
-	++folder_name;
+series_struct* series_load(series_struct* series, dstring_struct* base_dir, const char* folder_name) {
 	if(!dstring_append(&series->folder_name, folder_name)) {
 		fprintf(stderr, "Error loading series, folder_name dstring append error\n");
 		return NULL;
