@@ -21,6 +21,12 @@ darray_struct* darray_init_with_size(darray_struct* darray, size_t elem_size, si
 darray_struct* darray_init(darray_struct* darray, size_t elem_size) {
 	return darray_init_with_size(darray, elem_size, DARRAY_INITIAL_SIZE);
 }
+void darray_lazy_init(darray_struct* darray, size_t elem_size) {
+	darray->total_length = 0;
+	darray->length = 0;
+	darray->elem_size = elem_size;
+	darray->array = NULL;
+}
 void darray_free(darray_struct* darray) {
 	if(darray->array == NULL) {
 		return;
@@ -45,8 +51,15 @@ darray_struct* darray_increase_size_specific_amount(darray_struct* darray, size_
 	}
 	return darray;
 }
+// Gives some breathing room when resizing.
 darray_struct* darray_increase_size(darray_struct* darray) {
-	return darray_increase_size_specific_amount(darray, DARRAY_INCREMENT_SIZE);
+	size_t add_elems = 0;
+	if(darray->total_length < DARRAY_INCREMENT_SIZE) {
+		add_elems = 5;
+	} else {
+		add_elems = DARRAY_INCREMENT_SIZE;
+	}
+	return darray_increase_size_specific_amount(darray, add_elems);
 }
 // Will return the darray, or NULL if error. Uses memcpy to add the item
 darray_struct* darray_append(darray_struct* darray, const void* elem) {

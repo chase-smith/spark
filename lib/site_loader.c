@@ -266,11 +266,13 @@ int load_post_dates(configuration_struct* configuration, site_content_struct* si
 	dstring_struct out_dates;
 	dstring_struct date_command;
 	dstring_struct date_output;
+	darray_struct read_dates;
 
 	dstring_lazy_init(&base_dir);
 	dstring_lazy_init(&out_dates);
 	dstring_lazy_init(&date_command);
 	dstring_lazy_init(&date_output);
+	darray_lazy_init(&read_dates, sizeof(char*));
 
 	if(!dstring_append(&base_dir, configuration->code_base_dir)
 		|| !dstring_append(&base_dir, "/generating/post_dates")) {
@@ -338,15 +340,6 @@ int load_post_dates(configuration_struct* configuration, site_content_struct* si
 	int process_exit_code;
 	if(!dstring_read_process_output(&date_output, popen(date_command.str, "r"), &process_exit_code)) {
 		fprintf(stderr, "Error running date command\n");
-		dstring_free(&date_output);
-		dstring_free(&base_dir);
-		dstring_free(&out_dates);
-		dstring_free(&date_command);
-		return 0;
-	}
-	darray_struct read_dates;
-	if(!darray_init(&read_dates, sizeof(char*))) {
-		fprintf(stderr, "Error with post dates, darray init error\n");
 		dstring_free(&date_output);
 		dstring_free(&base_dir);
 		dstring_free(&out_dates);

@@ -46,6 +46,7 @@ typedef struct darray_struct {
 
 darray_struct* darray_init_with_size(darray_struct*, size_t, size_t);
 darray_struct* darray_init(darray_struct*, size_t);
+void darray_lazy_init(darray_struct*, size_t);
 void darray_free(darray_struct*);
 darray_struct* darray_increase_size_specific_amount(darray_struct*, size_t);
 darray_struct* darray_increase_size(darray_struct*);

@@ -77,11 +77,9 @@ darray_struct* get_html_filenames_in_directory(const char* directory) {
 		fprintf(stderr, "Error getting HTML filenames in %s, malloc error\n", directory);
 		return NULL;
 	}
-	if(!darray_init(filenames, sizeof(dstring_struct))) {
-		fprintf(stderr, "Error getting HTML filenames in %s, darray init error\n", directory);
-		free(filenames);
-		return NULL;
-	}
+
+	darray_lazy_init(filenames, sizeof(dstring_struct));
+
 	DIR* dir = opendir(directory);
 	if(dir == NULL) {
 		fprintf(stderr, "Error getting HTML filenames, error opening directory %s\n", directory);

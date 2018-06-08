@@ -8,6 +8,10 @@ int try_get_config_value(int argc, char* argv[], const char* config_name, void* 
 	return 1;
 }
 int load_configuration(configuration_struct* configuration, const char* config_file) {
+	darray_struct lines;
+
+	darray_lazy_init(&lines, sizeof(char*));
+
 	if(!dstring_init(&configuration->raw_config_file)) {
 		fprintf(stderr, "Unable to initialize dstring for reading config file");
 		return 0;
@@ -18,11 +22,6 @@ int load_configuration(configuration_struct* configuration, const char* config_f
 	}
 	if(configuration->raw_config_file.length == 0) {
 		fprintf(stderr, "Loaded empty config file\n");
-		return 0;
-	}
-	darray_struct lines;
-	if(!darray_init(&lines, sizeof(char*))) {
-		fprintf(stderr, "Error loading config file, darray init error\n");
 		return 0;
 	}
 	if(!dstring_split_to_darray(&configuration->raw_config_file, &lines, '\n')) {

@@ -35,11 +35,11 @@ series_struct* series_load(series_struct* series, dstring_struct* base_dir, cons
 }
 series_struct* series_init(series_struct* series) {
 	series->order = 0;
+	darray_lazy_init(&series->posts, sizeof(post_struct*));
 	int success = dstring_init(&series->landing_desc_html)
 		&& dstring_init_with_size(&series->short_description, 200)
 		&& dstring_init_with_size(&series->title, 100)
-		&& dstring_init_with_size(&series->folder_name, 100)
-		&& darray_init_with_size(&series->posts, sizeof(post_struct*), 20);
+		&& dstring_init_with_size(&series->folder_name, 100);
 	if(!success) {
 		series_free(series);
 		return NULL;

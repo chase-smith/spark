@@ -25,13 +25,13 @@ void site_content_free(site_content_struct* site_content) {
 }
 site_content_struct* site_content_init(site_content_struct* site_content) {
 	site_content->current_time = 0;
+	darray_lazy_init(&site_content->misc_pages, sizeof(misc_page_struct));
+	darray_lazy_init(&site_content->series, sizeof(series_struct));
+	darray_lazy_init(&site_content->posts, sizeof(post_struct));
+	darray_lazy_init(&site_content->tags, sizeof(tag_posts_struct));
 	int success = html_components_init(&site_content->html_components)
 		&& theme_init(&site_content->dark_theme)
-		&& theme_init(&site_content->bright_theme)
-		&& darray_init(&site_content->misc_pages, sizeof(misc_page_struct))
-		&& darray_init(&site_content->series, sizeof(series_struct))
-		&& darray_init(&site_content->posts, sizeof(post_struct))
-		&& darray_init(&site_content->tags, sizeof(tag_posts_struct));
+		&& theme_init(&site_content->bright_theme);
 	if(!success) {
 		site_content_free(site_content);
 		return NULL;

@@ -41,29 +41,24 @@ post_struct* post_init(post_struct* post) {
 	post->publish_after_time = 0;
 	post->updated_at_time = 0;
 	post->series = NULL;
-	int success = 
-		dstring_init_with_size(&post->folder_name, 100)
-		&& dstring_init_with_size(&post->title, 100)
-		&& dstring_init_with_size(&post->content, 10000)
-		&& dstring_init_with_size(&post->author, 30)
-		&& dstring_init_with_size(&post->raw_tags, 100)
-		&& darray_init_with_size(&post->tags, sizeof(char*), 10)
-		&& dstring_init_with_size(&post->series_name, 30)
-		&& dstring_init_with_size(&post->short_description, 200)
-		&& dstring_init_with_size(&post->long_description, 400)
-		&& dstring_init_with_size(&post->raw_suggested_next_reading, 400)
-		&& dstring_init_with_size(&post->raw_suggested_prev_reading, 400)
-		&& darray_init_with_size(&post->suggested_next_reading_names, sizeof(char*), 20)
-		&& darray_init_with_size(&post->suggested_prev_reading_names, sizeof(char*), 20)
-		&& darray_init_with_size(&post->suggested_next_reading, sizeof(post_struct*), 20)
-		&& darray_init_with_size(&post->suggested_prev_reading, sizeof(post_struct*), 20)
-		&& dstring_init_with_size(&post->written_date, 50)
-		&& dstring_init_with_size(&post->publish_after, 50)
-		&& dstring_init_with_size(&post->updated_at, 50);
-	if(!success) {
-		post_free(post);
-		return NULL;
-	}
+	dstring_lazy_init(&post->folder_name);
+	dstring_lazy_init(&post->title);
+	dstring_lazy_init(&post->content);
+	dstring_lazy_init(&post->author);
+	dstring_lazy_init(&post->raw_tags);
+	dstring_lazy_init(&post->series_name);
+	dstring_lazy_init(&post->short_description);
+	dstring_lazy_init(&post->long_description);
+	dstring_lazy_init(&post->raw_suggested_next_reading);
+	dstring_lazy_init(&post->raw_suggested_prev_reading);
+	dstring_lazy_init(&post->written_date);
+	dstring_lazy_init(&post->publish_after);
+	dstring_lazy_init(&post->updated_at);
+	darray_lazy_init(&post->tags, sizeof(char*));
+	darray_lazy_init(&post->suggested_next_reading_names, sizeof(char*));
+	darray_lazy_init(&post->suggested_prev_reading_names, sizeof(char*));
+	darray_lazy_init(&post->suggested_next_reading, sizeof(post_struct*));
+	darray_lazy_init(&post->suggested_prev_reading, sizeof(post_struct*));
 	return post;
 }
 void post_print_debug(post_struct* post) {
