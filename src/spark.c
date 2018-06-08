@@ -27,7 +27,8 @@
 #define ERROR_GENERATING_SITE 3
 #define ERROR_OTHER 4
 
-
+// GENERAL TODO: I think all core object inits can/should have lazy versions,
+// and those lazy versions should generally be used instead of the non-lazy versions.
 
 // GENERAL TODO: Fix includes across all files, some files include
 // things they don't need.
@@ -159,10 +160,7 @@ int main(int argc, char* argv[]) {
 		return ERROR_BAD_CONFIGURATION;
 	}
 	dstring_struct cbase_dir;
-	if(!dstring_init(&cbase_dir)) {
-		fprintf(stderr, "Error initializing code base dir string\n");
-		return ERROR_OTHER;
-	}
+	dstring_lazy_init(&cbase_dir);
 	if(!dstring_append(&cbase_dir, settings.configuration.code_base_dir)) {
 		fprintf(stderr, "Error appending code base dir\n");
 		return ERROR_OTHER;

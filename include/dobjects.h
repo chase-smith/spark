@@ -52,8 +52,10 @@ darray_struct* darray_increase_size(darray_struct*);
 darray_struct* darray_append(darray_struct*, const void*) __attribute__((hot));
 void* darray_get_elem(darray_struct*, size_t);
 darray_struct* darray_clone(darray_struct*);
+
 dstring_struct* dstring_init_with_size(dstring_struct*, size_t);
 dstring_struct* dstring_init(dstring_struct*);
+void dstring_lazy_init(dstring_struct*);
 void dstring_free(dstring_struct*);
 void darray_of_dstrings_free(darray_struct*);
 dstring_struct* dstring_resize(dstring_struct*, size_t);

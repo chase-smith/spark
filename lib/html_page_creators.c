@@ -2,10 +2,11 @@
 #include "html_page_creators.h"
 int create_page(site_content_struct* site_content, dstring_struct* page_content, theme_struct* theme, page_generation_settings_struct* page_generation_settings) {
 	dstring_struct page;
-	if(!dstring_init_with_size(&page, 10000)) {
-		fprintf(stderr, "Error creating page, dstring init error\n");
-		return PAGE_GENERATION_FAILURE;
-	}
+	dstring_struct dest_filename;
+
+	dstring_lazy_init(&page);
+	dstring_lazy_init(&dest_filename);
+
 #define CREATE_PAGE_APPEND(appending, err_message) if(!dstring_append(&page, appending)) { fprintf(stderr, "Error creating page, couldn't append %s\n", err_message); dstring_free(&page); return PAGE_GENERATION_FAILURE; }
 #define CREATE_PAGE_PRINTF_APPEND(err_message, format, args...) if(!dstring_append_printf(&page, format, args)) { fprintf(stderr, "Error creating page, couldn't append %s\n", err_message); dstring_free(&page); return PAGE_GENERATION_FAILURE; }
 	CREATE_PAGE_APPEND(site_content->html_components.header.str, "header")
@@ -47,12 +48,6 @@ int create_page(site_content_struct* site_content, dstring_struct* page_content,
 
 #undef CREATE_PAGE_APPEND
 #undef CREATE_PAGE_PRINTF_APPEND
-	dstring_struct dest_filename;
-	if(!dstring_init(&dest_filename)) {
-		fprintf(stderr, "Error generating page, dstring init error\n");
-		dstring_free(&page);
-		return PAGE_GENERATION_FAILURE;
-	}
 	if(!dstring_append(&dest_filename, theme->html_base_dir.str)
 		|| !dstring_append(&dest_filename, "/")
 		|| !dstring_append(&dest_filename, page_generation_settings->filename)) {
@@ -81,21 +76,16 @@ int create_page(site_content_struct* site_content, dstring_struct* page_content,
 }
 int create_page_wrapper(site_content_struct* site_content, dstring_struct* page_content, page_generation_settings_struct* page_generation_settings, int is_post) {
 	dstring_struct wrapped_page;
-	if(!dstring_init_with_size(&wrapped_page, page_content->length + 50)) {
-		fprintf(stderr, "Error creating page, dstring init error\n");
-		return PAGE_GENERATION_FAILURE;
-	}
+	dstring_struct canonical_url;
+
+	dstring_lazy_init(&wrapped_page);
+	dstring_lazy_init(&canonical_url);
+
 	if(!dstring_append(&wrapped_page, "<main")
 		|| !dstring_append(&wrapped_page, is_post ? " class='post'>\n" : ">\n")
 		|| !dstring_append(&wrapped_page, page_content->str)
 		|| !dstring_append(&wrapped_page, "</main>\n")) {
 		fprintf(stderr, "Error creating page, dstring append error\n");
-		dstring_free(&wrapped_page);
-		return PAGE_GENERATION_FAILURE;
-	}
-	dstring_struct canonical_url;
-	if(!dstring_init(&canonical_url)) {
-		fprintf(stderr, "Error creating page, canonical url dstring init error\n");
 		dstring_free(&wrapped_page);
 		return PAGE_GENERATION_FAILURE;
 	}
@@ -205,28 +195,12 @@ int create_post_page(site_content_struct* site_content, post_struct* post) {
 	dstring_struct tags;
 	dstring_struct url_path;
 	dstring_struct filename;
-	if(!dstring_init_with_size(&page, 10000)) {
-		fprintf(stderr, "Error creating post page, dstring init error\n");
-		return PAGE_GENERATION_FAILURE;
-	}
-	if(!dstring_init(&tags)) {
-		fprintf(stderr, "Error creating post page, dstring init error\n");
-		dstring_free(&page);
-		return PAGE_GENERATION_FAILURE;
-	}
-	if(!dstring_init(&url_path)) {
-		fprintf(stderr, "Error creating post page, dstring init error\n");
-		dstring_free(&page);
-		dstring_free(&tags);
-		return PAGE_GENERATION_FAILURE;
-	}
-	if(!dstring_init(&filename)) {
-		fprintf(stderr, "Error creating post page, dstring init error\n");
-		dstring_free(&page);
-		dstring_free(&tags);
-		dstring_free(&url_path);
-		return PAGE_GENERATION_FAILURE;
-	}
+
+	dstring_lazy_init(&page);
+	dstring_lazy_init(&tags);
+	dstring_lazy_init(&url_path);
+	dstring_lazy_init(&filename);
+
 	if(!dstring_append(&url_path, "posts/")
 		|| !dstring_append(&url_path, post->folder_name.str)) {
 		fprintf(stderr, "Error creating post page, dstring append error\n");

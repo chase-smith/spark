@@ -1,10 +1,9 @@
 #include "site_generator.h"
 int remove_old_tag_files(site_content_struct* site_content, theme_struct* theme) {
 	dstring_struct tag_dir;
-	if(!dstring_init(&tag_dir)) {
-		fprintf(stderr, "Error generating tags, tag_dir dstring init error\n");
-		return 0;
-	}
+
+	dstring_lazy_init(&tag_dir);
+
 	if(!dstring_append(&tag_dir, theme->html_base_dir.str)
 		|| !dstring_append(&tag_dir, "/tags/")) {
 		fprintf(stderr, "Error generating tags, tag_dir dstring append error\n");
@@ -433,14 +432,13 @@ int generate_sitemap(site_content_struct* site_content) {
 // TODO FIXME: This assumes that rss_dstring is a fully formed RSS object.
 int write_rss_file_if_different(dstring_struct* rss_dstring, const char* filename, int* did_write) {
 	(*did_write) = 0;
+	dstring_struct file_contents;
+
+	dstring_lazy_init(&file_contents);
+
 	char* lastBuildDate_start = strstr(rss_dstring->str, "lastBuildDate");
 	if(lastBuildDate_start == NULL) {
 		fprintf(stderr, "Error with RSS file, couldn't find lastBuildDate\n");
-		return 0;
-	}
-	dstring_struct file_contents;
-	if(!dstring_init(&file_contents)) {
-		fprintf(stderr, "Error writing file, dstring init error\n");
 		return 0;
 	}
 	int need_to_write = 1;
@@ -481,7 +479,14 @@ int write_rss_file_if_different(dstring_struct* rss_dstring, const char* filenam
 
 int generate_main_rss(configuration_struct* configuration, site_content_struct* site_content) {
 	time_t now_time;
+	dstring_struct rss_feed;
+	dstring_struct rss_filename;
+
+	dstring_lazy_init(&rss_feed);
+	dstring_lazy_init(&rss_filename);
+
 	time(&now_time);
+
 	struct tm* time_struct = gmtime(&now_time);
 	if(time_struct == NULL) {
 		fprintf(stderr, "Error generating RSS, couldn't get time\n");
@@ -491,11 +496,6 @@ int generate_main_rss(configuration_struct* configuration, site_content_struct* 
 	size_t strftime_res = strftime(buff, 50, "%a, %d %b %Y %T %z", time_struct);
 	if(strftime_res == 0) {
 		fprintf(stderr, "Error generating RSS, couldn't strftime\n");
-		return 0;
-	}
-	dstring_struct rss_feed;
-	if(!dstring_init(&rss_feed)) {
-		fprintf(stderr, "Error generating RSS, couldn't init rss dstring\n");
 		return 0;
 	}
 	if(!dstring_append_printf(&rss_feed,
@@ -539,12 +539,6 @@ int generate_main_rss(configuration_struct* configuration, site_content_struct* 
 	}
 	if(!dstring_append(&rss_feed, "</channel>\n</rss>\n")) {
 		fprintf(stderr, "Error generating RSS, dstring append error\n");
-		dstring_free(&rss_feed);
-		return 0;
-	}
-	dstring_struct rss_filename;
-	if(!dstring_init(&rss_filename)) {
-		fprintf(stderr, "Error generating RSS, filename dstring init error\n");
 		dstring_free(&rss_feed);
 		return 0;
 	}

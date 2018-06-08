@@ -9,13 +9,12 @@ void series_free(series_struct* series) {
 	darray_free(&series->posts);
 }
 series_struct* series_load(series_struct* series, dstring_struct* base_dir, const char* folder_name) {
+	dstring_struct order_string;
+
+	dstring_lazy_init(&order_string);
+
 	if(!dstring_append(&series->folder_name, folder_name)) {
 		fprintf(stderr, "Error loading series, folder_name dstring append error\n");
-		return NULL;
-	}
-	dstring_struct order_string;
-	if(!dstring_init(&order_string)) {
-		fprintf(stderr, "Error loading series, dstring init error\n");
 		return NULL;
 	}
 	

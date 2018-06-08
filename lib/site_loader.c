@@ -1,10 +1,9 @@
 #include "site_loader.h"
 int load_themes(configuration_struct* configuration, site_content_struct* site_content) {
 	dstring_struct base_dir;
-	if(!dstring_init(&base_dir)) {
-		fprintf(stderr, "Error loading themes, dstring init error\n");
-		return 0;
-	}
+
+	dstring_lazy_init(&base_dir);
+
 	if(!dstring_append(&base_dir, configuration->code_base_dir) 
 		|| !dstring_append(&base_dir, "/themes/bright")) {
 		fprintf(stderr, "Error loading themes, dstring append error\n");
@@ -49,10 +48,9 @@ int load_themes(configuration_struct* configuration, site_content_struct* site_c
 }
 int load_html_components(configuration_struct* configuration, site_content_struct* site_content) {
 	dstring_struct base_dir;
-	if(!dstring_init(&base_dir)) {
-		fprintf(stderr, "Error loading HTML components, dstring init error\n");
-		return 0;
-	}
+
+	dstring_lazy_init(&base_dir);
+
 	if(!dstring_append(&base_dir, configuration->code_base_dir)
 		|| !dstring_append(&base_dir, "/components")) {
 		fprintf(stderr, "Error loading HTML components, dstring append error\n");
@@ -74,10 +72,9 @@ int series_sort_compare(const void* series_a, const void* series_b) {
 
 int load_series(configuration_struct* configuration, site_content_struct* site_content) {
 	dstring_struct base_dir;
-	if(!dstring_init(&base_dir)) {
-		fprintf(stderr, "Error loading all series, dstring init error\n");
-		return 0;
-	}
+
+	dstring_lazy_init(&base_dir);
+
 	if(!dstring_append(&base_dir, configuration->code_base_dir)
 		|| !dstring_append(&base_dir, "/series/")) {
 		fprintf(stderr, "Error loading all series, dstring append error\n");
@@ -156,10 +153,9 @@ int load_series(configuration_struct* configuration, site_content_struct* site_c
 }
 int load_misc_pages(configuration_struct* configuration, site_content_struct* site_content) {
 	dstring_struct base_dir;
-	if(!dstring_init(&base_dir)) {
-		fprintf(stderr, "Error loading all misc_pages, dstring init error\n");
-		return 0;
-	}
+
+	dstring_lazy_init(&base_dir);
+
 	if(!dstring_append(&base_dir, configuration->code_base_dir)
 		|| !dstring_append(&base_dir, "/misc_pages/")) {
 		fprintf(stderr, "Error loading all misc_pages, dstring append error\n");
@@ -268,10 +264,14 @@ time_t read_time_from_str(const char* str) {
 int load_post_dates(configuration_struct* configuration, site_content_struct* site_content) {
 	dstring_struct base_dir;
 	dstring_struct out_dates;
-	if(!dstring_init(&base_dir) || !dstring_init(&out_dates)) {
-		fprintf(stderr, "Error getting post dates, dstring init error\n");
-		return 0;
-	}
+	dstring_struct date_command;
+	dstring_struct date_output;
+
+	dstring_lazy_init(&base_dir);
+	dstring_lazy_init(&out_dates);
+	dstring_lazy_init(&date_command);
+	dstring_lazy_init(&date_output);
+
 	if(!dstring_append(&base_dir, configuration->code_base_dir)
 		|| !dstring_append(&base_dir, "/generating/post_dates")) {
 		fprintf(stderr, "Error getting post dates, base_dir dstring append error\n");
@@ -326,25 +326,10 @@ int load_post_dates(configuration_struct* configuration, site_content_struct* si
 		dstring_free(&out_dates);
 		return 0;
 	}
-	dstring_struct date_command;
-	if(!dstring_init(&date_command)) {
-		fprintf(stderr, "Error with post dates, date_command dstring init error\n");
-		dstring_free(&base_dir);
-		dstring_free(&out_dates);
-		return 0;
-	}
 	if(!dstring_append(&date_command, "date 2>/dev/null -f ")
 		|| !dstring_append(&date_command, base_dir.str)
 		|| !dstring_append(&date_command, " +%s")) {
 		fprintf(stderr, "Error with post dates, date_command dstring append error\n");
-		dstring_free(&base_dir);
-		dstring_free(&out_dates);
-		dstring_free(&date_command);
-		return 0;
-	}
-	dstring_struct date_output;
-	if(!dstring_init(&date_output)) {
-		fprintf(stderr, "Error with post dates, date_output dstring init error\n");
 		dstring_free(&base_dir);
 		dstring_free(&out_dates);
 		dstring_free(&date_command);
@@ -458,10 +443,9 @@ int load_posts(configuration_struct* configuration, site_content_struct* site_co
 	// This is due to the timezone conversion stuff mentioned at the top
 	// of the program.
 	dstring_struct base_dir;
-	if(!dstring_init(&base_dir)) {
-		fprintf(stderr, "Error loading all posts, dstring init error\n");
-		return 0;
-	}
+
+	dstring_lazy_init(&base_dir);
+
 	if(!dstring_append(&base_dir, configuration->code_base_dir)
 		|| !dstring_append(&base_dir, "/posts/")) {
 		fprintf(stderr, "Error loading all posts, dstring append error\n");

@@ -1,6 +1,6 @@
 #include "dobjects.h"
 
-
+static const char EMPTY_STRING[] = "";
 
 
 // Will return NULL if unable to init
@@ -102,15 +102,27 @@ dstring_struct* dstring_init_with_size(dstring_struct* dstring, size_t initial_s
 	}
 	return dstring;
 }
+// Immediately allocates DSTRING_INITIAL_SIZE bytes
 dstring_struct* dstring_init(dstring_struct* dstring) {
 	return dstring_init_with_size(dstring, DSTRING_INITIAL_SIZE);
 }
+// Will delay allocation of memory until an append is attempted.
+// It points str at an empty string "", so that it's safe to print the string.
+// This function exists so that dstring initialization code doesn't need to
+// do error checking; since the only way to use the string is to append,
+// and any code calling a dstring append function should do error checking,
+// there's no harm in doing this, and it should make code cleaner.
+void dstring_lazy_init(dstring_struct* dstring) {
+	dstring->str = (char*) EMPTY_STRING;
+	dstring->total_length = 0;
+	dstring->length = 0;
+}
 void dstring_free(dstring_struct* dstring) {
-	if(dstring->str == NULL || dstring->total_length == 0) {
+	if(dstring->str == NULL || dstring->str == EMPTY_STRING || dstring->total_length == 0) {
 		return;
 	}
 	free(dstring->str);
-	dstring->str = NULL;
+	dstring->str = (char*) EMPTY_STRING;
 	dstring->total_length = 0;
 	dstring->length = 0;
 }
@@ -123,8 +135,11 @@ void darray_of_dstrings_free(darray_struct* darray) {
 	darray_free(darray);
 }
 // Will return NULL if unable to resize
-dstring_struct* dstring_resize(dstring_struct* dstring, size_t min_additional_bytes) {
-	size_t new_size = dstring->total_length + min_additional_bytes + DSTRING_INCREMENT_SIZE;
+dstring_struct* dstring_resize_no_extra(dstring_struct* dstring, size_t additional_bytes) {
+	size_t new_size = dstring->total_length + additional_bytes;
+	if(dstring->str == EMPTY_STRING) {
+		dstring->str = NULL;
+	}
 	void* new_pointer = realloc(dstring->str, new_size + 1);
 	if(new_pointer == NULL) {
 		fprintf(stderr, "Unable to allocate more space for dstring\n");
@@ -134,6 +149,17 @@ dstring_struct* dstring_resize(dstring_struct* dstring, size_t min_additional_by
 		dstring->total_length = new_size;
 	}
 	return dstring;
+}
+// Adds some extra breathing room when resizing. Returns NULL on error
+dstring_struct* dstring_resize(dstring_struct* dstring, size_t min_additional_bytes) {
+	size_t add_bytes = min_additional_bytes;
+	// Don't give small strings excessive breathing room
+	if(dstring->total_length >= DSTRING_INCREMENT_SIZE) {
+		add_bytes += DSTRING_INCREMENT_SIZE;
+	} else {
+		add_bytes += 50;
+	}
+	return dstring_resize_no_extra(dstring, add_bytes);
 }
 
 // Will return the dstring, or NULL if an error
@@ -196,7 +222,7 @@ dstring_struct* dstring_read_file(dstring_struct* dstring, const char* file) {
 	size_t file_size = (size_t) ftell(fd);
 	rewind(fd);
 	if((dstring->total_length - dstring->length) < (file_size + 1)) {
-		if(!dstring_resize(dstring, file_size)) {
+		if(!dstring_resize_no_extra(dstring, file_size)) {
 			fclose(fd);
 			fprintf(stderr, "Bailing out of reading file %s into dstring because dstring couldn't resize\n", file);
 			return NULL;
@@ -263,10 +289,8 @@ int dstring_write_file(dstring_struct* dstring, const char* file) {
 int dstring_write_file_if_different(dstring_struct* dstring, const char* filename, int* did_write) {
 	(*did_write) = 0;
 	dstring_struct file_contents;
-	if(!dstring_init(&file_contents)) {
-		fprintf(stderr, "Error writing file, dstring init error\n");
-		return 0;
-	}
+	dstring_lazy_init(&file_contents);
+
 	int need_to_write = 1;
 	if(!access(filename, F_OK)) {
 		if(!dstring_read_file(&file_contents, filename)) {

@@ -103,11 +103,8 @@ darray_struct* get_html_filenames_in_directory(const char* directory) {
 		}
 		// TODO: I should really check to make sure S_ISREG
 		dstring_struct filename;
-		if(!dstring_init(&filename)) {
-			fprintf(stderr, "Error getting HTML filenames from directory %s, dstring init error\n", directory);
-			had_error = 1;
-			break;
-		}
+		dstring_lazy_init(&filename);
+
 		if(!dstring_append(&filename, dir_ent->d_name)) {
 			fprintf(stderr, "Error getting HTML filenames from directory %s, dstring append error\n", directory);
 			had_error = 1;
