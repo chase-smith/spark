@@ -11,11 +11,8 @@ int load_configuration(configuration_struct* configuration, const char* config_f
 	darray_struct lines;
 
 	darray_lazy_init(&lines, sizeof(char*));
+	dstring_lazy_init(&configuration->raw_config_file);
 
-	if(!dstring_init(&configuration->raw_config_file)) {
-		fprintf(stderr, "Unable to initialize dstring for reading config file");
-		return 0;
-	}
 	if(!dstring_read_file(&configuration->raw_config_file, config_file)) {
 		fprintf(stderr, "Error loading config file\n");
 		return 0;
@@ -45,7 +42,9 @@ int load_configuration(configuration_struct* configuration, const char* config_f
 }
 int do_pre_validations(configuration_struct* configuration) {
 	dstring_struct base_dir;
-	dstring_init(&base_dir);
+
+	dstring_lazy_init(&base_dir);
+
 	dstring_append(&base_dir, configuration->code_base_dir);
 	int code_base_dirs_exist = try_check_dir_exists(&base_dir, "/posts", "code base")
 		&& try_check_dir_exists(&base_dir, "/components", "code base")
@@ -77,7 +76,6 @@ int do_pre_validations(configuration_struct* configuration) {
 	}	
 	dstring_free(&base_dir);
 
-	
 	return 1;
 }
 

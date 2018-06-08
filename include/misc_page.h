@@ -10,5 +10,5 @@ typedef struct misc_page_struct {
 } misc_page_struct;
 void misc_page_free(misc_page_struct*);
 misc_page_struct* misc_page_load(misc_page_struct*, dstring_struct*);
-misc_page_struct* misc_page_init(misc_page_struct*);
+void misc_page_init(misc_page_struct*);
 #endif

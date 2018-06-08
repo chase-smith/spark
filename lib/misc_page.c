@@ -20,16 +20,11 @@ misc_page_struct* misc_page_load(misc_page_struct* misc_page, dstring_struct* ba
 	dstring_remove_trailing_newlines(&misc_page->description);
 	return misc_page;
 }
-misc_page_struct* misc_page_init(misc_page_struct* misc_page) {
+void misc_page_init(misc_page_struct* misc_page) {
 	misc_page->generate = 0;
-	int success = dstring_init(&misc_page->content)
-		&& dstring_init_with_size(&misc_page->title, 100)
-		&& dstring_init_with_size(&misc_page->filename, 100)
-		&& dstring_init_with_size(&misc_page->description, 200);
-	if(!success) {
-		misc_page_free(misc_page);
-		return NULL;
-	}
-	return misc_page;
+	dstring_lazy_init(&misc_page->content);
+	dstring_lazy_init(&misc_page->title);
+	dstring_lazy_init(&misc_page->filename);
+	dstring_lazy_init(&misc_page->description);
 }
 

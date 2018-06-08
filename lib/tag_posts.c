@@ -5,10 +5,9 @@ void tag_posts_free(tag_posts_struct* tag_posts) {
 	dstring_free(&tag_posts->tag);
 	darray_free(&tag_posts->posts);
 }
-tag_posts_struct* tag_posts_init(tag_posts_struct* tag_posts) {
+void tag_posts_init(tag_posts_struct* tag_posts) {
 	dstring_lazy_init(&tag_posts->tag);
 	darray_lazy_init(&tag_posts->posts, sizeof(post_struct*));
-	return tag_posts;
 }
 void tag_posts_print_debug(tag_posts_struct* tag_posts) {
 	printf("Tag: %s\n", tag_posts->tag.str);

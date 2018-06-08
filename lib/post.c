@@ -33,7 +33,7 @@ void post_free(post_struct* post) {
 	dstring_free(&post->publish_after);
 	dstring_free(&post->updated_at);
 }
-post_struct* post_init(post_struct* post) {
+void post_init(post_struct* post) {
 	post->publish_when_ready = 0;
 	post->can_publish = 0;
 	post->has_code = 0;
@@ -59,7 +59,6 @@ post_struct* post_init(post_struct* post) {
 	darray_lazy_init(&post->suggested_prev_reading_names, sizeof(char*));
 	darray_lazy_init(&post->suggested_next_reading, sizeof(post_struct*));
 	darray_lazy_init(&post->suggested_prev_reading, sizeof(post_struct*));
-	return post;
 }
 void post_print_debug(post_struct* post) {
 	printf("Folder name: %s\n", post->folder_name.str);

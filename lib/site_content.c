@@ -23,20 +23,15 @@ void site_content_free(site_content_struct* site_content) {
 	}
 	darray_free(&site_content->tags);
 }
-site_content_struct* site_content_init(site_content_struct* site_content) {
+void site_content_init(site_content_struct* site_content) {
 	site_content->current_time = 0;
 	darray_lazy_init(&site_content->misc_pages, sizeof(misc_page_struct));
 	darray_lazy_init(&site_content->series, sizeof(series_struct));
 	darray_lazy_init(&site_content->posts, sizeof(post_struct));
 	darray_lazy_init(&site_content->tags, sizeof(tag_posts_struct));
-	int success = html_components_init(&site_content->html_components)
-		&& theme_init(&site_content->dark_theme)
-		&& theme_init(&site_content->bright_theme);
-	if(!success) {
-		site_content_free(site_content);
-		return NULL;
-	}
-	return site_content;
+	html_components_init(&site_content->html_components);
+	theme_init(&site_content->dark_theme);
+	theme_init(&site_content->bright_theme);
 }
 int site_content_add_post_to_tag(site_content_struct* site_content, post_struct* post, const char* tag) {
 	tag_posts_struct* tag_posts = find_tag_posts_by_tag(site_content, tag);
@@ -46,10 +41,8 @@ int site_content_add_post_to_tag(site_content_struct* site_content, post_struct*
 		// a local variable.
 		tag_posts_struct tag_posts_s;
 		tag_posts = &tag_posts_s;
-		if(!tag_posts_init(tag_posts)) {
-			fprintf(stderr, "Error adding post to tag, tag_posts_init error\n");
-			return 0;
-		}
+		tag_posts_init(tag_posts);
+
 		if(!dstring_append(&tag_posts->tag, tag)) {
 			fprintf(stderr, "Error adding post to tag, dstring append error\n");
 			tag_posts_free(tag_posts);

@@ -18,7 +18,7 @@ typedef struct site_content_struct {
 	darray_struct tags;
 } site_content_struct;
 void site_content_free(site_content_struct*);
-site_content_struct* site_content_init(site_content_struct*);
+void site_content_init(site_content_struct*);
 tag_posts_struct* find_tag_posts_by_tag(site_content_struct*, const char*);
 post_struct* find_post_by_folder_name(site_content_struct*, const char*);
 series_struct* find_series_by_folder_name(site_content_struct*, const char*);

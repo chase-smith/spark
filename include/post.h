@@ -35,7 +35,7 @@ typedef struct post_struct {
 } post_struct;
 
 void post_free(post_struct*);
-post_struct* post_init(post_struct*);
+void post_init(post_struct*);
 void post_print_debug(post_struct*);
 post_struct* post_load(post_struct*, dstring_struct*, const char*, int*);
 #endif

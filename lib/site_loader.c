@@ -114,11 +114,8 @@ int load_series(configuration_struct* configuration, site_content_struct* site_c
 		// count it as a critical error, it just means that the series won't
 		// be loaded in, because the series dir doesn't have enough data.
 		series_struct tmp_series_entry;
-		if(!series_init(&tmp_series_entry)) {
-			fprintf(stderr, "Error reading series folder, couldn't init series_struct\n");
-			had_error = 1;
-			break;
-		}
+		series_init(&tmp_series_entry);
+
 		if(!series_load(&tmp_series_entry, &base_dir, dir_ent->d_name)) {
 			fprintf(stderr, "Warning, series folder %s doesn't contain a valid series. Skipping\n", dir_ent->d_name);
 			dstring_remove_num_chars_in_text(&base_dir, dir_ent->d_name);
@@ -191,11 +188,7 @@ int load_misc_pages(configuration_struct* configuration, site_content_struct* si
 		}
 		// So it's a directory... Let's try to load it.
 		misc_page_struct tmp_misc_page_entry;
-		if(!misc_page_init(&tmp_misc_page_entry)) {
-			fprintf(stderr, "Error reading misc_pages folder, couldn't init misc_page_struct\n");
-			had_error = 1;
-			break;
-		}
+		misc_page_init(&tmp_misc_page_entry);
 		if(!misc_page_load(&tmp_misc_page_entry, &base_dir)) {
 			fprintf(stderr, "Error, misc_pages folder %s doesn't contain a valid misc page.\n", dir_ent->d_name);
 			dstring_remove_num_chars_in_text(&base_dir, dir_ent->d_name);
@@ -476,11 +469,8 @@ int load_posts(configuration_struct* configuration, site_content_struct* site_co
 		// count it as a critical error, it just means that the post
 		// won't be loaded in, because the post dir doesn't have enough data.
 		post_struct tmp_post_entry;
-		if(!post_init(&tmp_post_entry)) {
-			fprintf(stderr, "Error reading post folder, couldn't init post_struct\n");
-			had_error = 1;
-			break;
-		}
+		post_init(&tmp_post_entry);
+
 		int generate_flag_missing = 0;
 		if(!post_load(&tmp_post_entry, &base_dir, dir_ent->d_name, &generate_flag_missing) && generate_flag_missing) {
 			fprintf(stderr, "Skipping post %s because generate flag is missing\n", dir_ent->d_name);

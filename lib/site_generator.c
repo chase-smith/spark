@@ -62,10 +62,7 @@ int generate_tags(site_content_struct* site_content) {
 	for(size_t i = 0; i < site_content->tags.length; i++) {
 		tag_posts_struct* tag_posts = (tag_posts_struct*) darray_get_elem(&site_content->tags, i);
 		misc_page_struct tag_page;
-		if(!misc_page_init(&tag_page)) {
-			fprintf(stderr, "Error generating tags, misc_page init error\n");
-			return 0;
-		}
+		misc_page_init(&tag_page);
 		// Just a small note: The description is copied from the title.
 		// I'm calling this out because I had tried moving the description append
 		// to the top, to make things line up better, and was initially confused why
@@ -114,10 +111,8 @@ int generate_tags(site_content_struct* site_content) {
 	// with generating the individual tag pages, the index page won't have
 	// invalid links.
 	misc_page_struct tags_page;
-	if(!misc_page_init(&tags_page)) {
-		fprintf(stderr, "Error generating tags, misc_page init error\n");
-		return 0;
-	}
+	misc_page_init(&tags_page);
+
 	if(!dstring_append(&tags_page.filename, "tags/index.html")
 		|| !dstring_append(&tags_page.title, "All tags")
 		|| !dstring_append(&tags_page.description, "All tags")
@@ -160,10 +155,8 @@ int updated_post_sort_compare(const void* post_a, const void* post_b) {
 }
 int generate_index_page(site_content_struct* site_content, misc_page_struct* index_page_original) {
 	misc_page_struct index_page;
-	if(!misc_page_init(&index_page)) {
-		fprintf(stderr, "Error generating index page, misc_page_init error\n");
-		return 0;
-	}
+	misc_page_init(&index_page);
+
 	darray_struct* new_posts = darray_clone(&site_content->posts);
 	if(new_posts == NULL) {
 		fprintf(stderr, "Error generating index page, couldn't clone posts\n");
@@ -287,10 +280,8 @@ int make_series_dir(series_struct* series, theme_struct* theme) {
 int generate_series(site_content_struct* site_content) {
 	// TODO: Remove old series pages
 	misc_page_struct series_listing_page;
-	if(!misc_page_init(&series_listing_page)) {
-		fprintf(stderr, "Error generating series, misc_page init error\n");
-		return 0;
-	}
+	misc_page_init(&series_listing_page);
+
 	if(!dstring_append(&series_listing_page.filename, "series/index.html")
 		|| !dstring_append(&series_listing_page.description, "List of all series")
 		|| !dstring_append(&series_listing_page.title, "All series")
@@ -302,11 +293,8 @@ int generate_series(site_content_struct* site_content) {
 	for(size_t i = 0; i < site_content->series.length; i++) {
 		series_struct* series = (series_struct*) darray_get_elem(&site_content->series, i);
 		misc_page_struct series_page;
-		if(!misc_page_init(&series_page)) {
-			fprintf(stderr, "Error generating series, misc_page_init error\n");
-			misc_page_free(&series_listing_page);
-			return 0;
-		}
+		misc_page_init(&series_page);
+
 		if(!dstring_append_printf(&series_listing_page.content,
 					"<section>\n<h3><a href=\"/series/%s\">%s</a></h3>\n<p>%s</p>\n</section>\n",
 					series->folder_name.str,
@@ -374,10 +362,8 @@ int generate_series(site_content_struct* site_content) {
 // Generates the sitemap.html page, which lists all posts on a single page
 int generate_sitemap(site_content_struct* site_content) {
 	misc_page_struct sitemap;
-	if(!misc_page_init(&sitemap)) {
-		fprintf(stderr, "Error generating sitemap, misc_page_init error\n");
-		return 0;
-	}
+	misc_page_init(&sitemap);
+
 	if(!dstring_append(&sitemap.title, "Sitemap")
 		|| !dstring_append(&sitemap.description, "Sitemap")
 		|| !dstring_append(&sitemap.filename, "sitemap.html")

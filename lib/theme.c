@@ -7,18 +7,13 @@ void theme_free(theme_struct* theme) {
 	dstring_free(&theme->name);
 	dstring_free(&theme->html_base_dir);
 }
-theme_struct* theme_init(theme_struct* theme) {
+void theme_init(theme_struct* theme) {
 	theme->alt_theme = NULL;
-	int success = dstring_init(&theme->main_css)
-		&& dstring_init(&theme->syntax_highlighting_css)
-		&& dstring_init_with_size(&theme->host, 100)
-		&& dstring_init_with_size(&theme->name, 100)
-		&& dstring_init_with_size(&theme->html_base_dir, 200);
-	if(!success) {
-		theme_free(theme);
-		return NULL;
-	}
-	return theme;
+	dstring_lazy_init(&theme->main_css);
+	dstring_lazy_init(&theme->syntax_highlighting_css);
+	dstring_lazy_init(&theme->host);
+	dstring_lazy_init(&theme->name);
+	dstring_lazy_init(&theme->html_base_dir);
 }
 theme_struct* theme_load(theme_struct* theme, dstring_struct* base_dir) {
 	if(!dstring_try_load_file(&theme->main_css, base_dir, "/main.css", "theme")) {

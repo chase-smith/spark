@@ -27,8 +27,6 @@
 #define ERROR_GENERATING_SITE 3
 #define ERROR_OTHER 4
 
-// GENERAL TODO: I think all core object inits can/should have lazy versions,
-// and those lazy versions should generally be used instead of the non-lazy versions.
 
 // GENERAL TODO: Fix includes across all files, some files include
 // things they don't need.

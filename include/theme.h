@@ -11,6 +11,6 @@ typedef struct theme_struct {
 	theme_struct* alt_theme;
 } theme_struct;
 void theme_free(theme_struct*);
-theme_struct* theme_init(theme_struct*);
+void theme_init(theme_struct*);
 theme_struct* theme_load(theme_struct*, dstring_struct*);
 #endif

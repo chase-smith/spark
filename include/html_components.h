@@ -7,6 +7,6 @@ typedef struct html_components_struct {
 	dstring_struct trailer;
 } html_components_struct;
 void html_components_free(html_components_struct*);
-html_components_struct* html_components_init(html_components_struct*);
+void html_components_init(html_components_struct*);
 html_components_struct* html_components_load(html_components_struct*, dstring_struct*);
 #endif
