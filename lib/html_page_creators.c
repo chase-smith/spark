@@ -11,7 +11,7 @@ int create_page(site_content_struct* site_content, dstringbuilder_struct* page_c
 #define CREATE_PAGE_APPEND_DSTRING(appending, err_message) if(!dstringbuilder_append_dstring(&page_builder, appending)) { fprintf(stderr, "Error creating page, couldn't append %s\n", err_message); dstringbuilder_free(&page_builder); return PAGE_GENERATION_FAILURE; }
 #define CREATE_PAGE_APPEND_DSTRINGBUILDER(appending, err_message) if(!dstringbuilder_append_dstringbuilder(&page_builder, appending)) { fprintf(stderr, "Error creating page, couldn't append %s\n", err_message); dstringbuilder_free(&page_builder); return PAGE_GENERATION_FAILURE; }
 #define CREATE_PAGE_PRINTF_APPEND(err_message, format, args...) if(!dstringbuilder_append_printf(&page_builder, format, args)) { fprintf(stderr, "Error creating page, couldn't append %s\n", err_message); dstringbuilder_free(&page_builder); return PAGE_GENERATION_FAILURE; }
-	CREATE_PAGE_APPEND(site_content->html_components.header.str, "header")
+	CREATE_PAGE_APPEND_DSTRING(&site_content->html_components.header, "header")
 	if(page_generation_settings->author != NULL) {
 		CREATE_PAGE_PRINTF_APPEND("author header", "<meta name=\"author\" content=\"%s\">\n", page_generation_settings->author)
 	}
@@ -27,9 +27,12 @@ int create_page(site_content_struct* site_content, dstringbuilder_struct* page_c
 
 	CREATE_PAGE_APPEND("</head>", "end head")
 
-	CREATE_PAGE_PRINTF_APPEND("style section", "<style>%s%s</style>",
-				theme->main_css.str,
-				page_generation_settings->has_code ? theme->syntax_highlighting_css.str : "")
+	CREATE_PAGE_APPEND("<style>", "style section")
+	CREATE_PAGE_APPEND_DSTRING(&theme->main_css, "main css")
+	if(page_generation_settings->has_code) {
+		CREATE_PAGE_APPEND_DSTRING(&theme->syntax_highlighting_css, "syntax highlighting css")
+	}
+	CREATE_PAGE_APPEND("</style>", "end style section")
 	
 	CREATE_PAGE_APPEND("<body>", "body begin")
 
@@ -41,9 +44,9 @@ int create_page(site_content_struct* site_content, dstringbuilder_struct* page_c
 	CREATE_PAGE_PRINTF_APPEND("page header", "<header class='nheader'>\n<a class='leftfloat' href='/'>%s</a> <a class='rightfloat' href='https://%s/%s'>[%s]</a>\n</header>\n", theme->host.str, theme->alt_theme->host.str, page_generation_settings->url_path, theme->alt_theme->name.str)
 
 	CREATE_PAGE_APPEND_DSTRINGBUILDER(page_content, "page content")
-	CREATE_PAGE_APPEND(site_content->html_components.footer.str, "page footer")
+	CREATE_PAGE_APPEND_DSTRING(&site_content->html_components.footer, "page footer")
 	CREATE_PAGE_APPEND("</body>", "end body")
-	CREATE_PAGE_APPEND(site_content->html_components.trailer.str, "page trailer")
+	CREATE_PAGE_APPEND_DSTRING(&site_content->html_components.trailer, "page trailer")
 
 #undef CREATE_PAGE_APPEND
 #undef CREATE_PAGE_APPEND_DSTRING
