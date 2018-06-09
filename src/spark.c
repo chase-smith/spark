@@ -37,7 +37,6 @@ typedef struct settings_struct {
 	char* config_file;
 	configuration_struct configuration;
 	int show_help;
-	int only_generate_if_publishable_posts_changes;
 } settings_struct;
 
 
@@ -58,7 +57,6 @@ int get_parameters(settings_struct* settings, int argc, char* argv[]) {
 		fprintf(stderr, "Missing required parameter --config\n");
 		return 0;
 	}
-	paramparser_get_flag(argc, argv, "--only-generate-if-publishable-posts-changes", &settings->only_generate_if_publishable_posts_changes);
 	return 1;
 }
 
