@@ -541,7 +541,7 @@ int generate_main_rss(configuration_struct* configuration, site_content_struct* 
 		
 }
 
-int generate_site(configuration_struct* configuration) {
+int generate_site_internal(configuration_struct* configuration) {
 	if(!do_pre_validations(configuration)) {
 		return 0;
 	}
@@ -614,5 +614,39 @@ int generate_site(configuration_struct* configuration) {
 		return 0;
 	}
 	site_content_free(&site_content);
+	return 1;
+}
+
+int generate_site(configuration_struct* configuration) {
+	dstring_struct cbase_dir;
+	dstring_lazy_init(&cbase_dir);
+	if(!dstring_append(&cbase_dir, configuration->code_base_dir)) {
+		fprintf(stderr, "Error appending code base dir\n");
+		return 0;
+	}
+	if(!make_directory(&cbase_dir, "/generating")) {
+		fprintf(stderr, "Error making /generating directory\n");
+		return 0;
+	}
+
+	if(!dstring_append(&cbase_dir, "/generating/gen.lock")) {
+		fprintf(stderr, "Error with lock directory\n");
+		return 0;
+	}
+	int fd = open(cbase_dir.str, O_CREAT | O_EXCL);
+	if(fd == -1) {
+		fprintf(stderr, "Error getting lock!\n");
+		dstring_free(&cbase_dir);
+		return 0;
+	} else {
+		int res = generate_site_internal(configuration);
+		unlink(cbase_dir.str);
+		if(!res) {
+			fprintf(stderr, "Error generating site\n");
+			dstring_free(&cbase_dir);
+			return 0;
+		}
+	}
+	dstring_free(&cbase_dir);
 	return 1;
 }

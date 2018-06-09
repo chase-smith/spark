@@ -78,34 +78,7 @@ int main(int argc, char* argv[]) {
 		fprintf(stderr, "Error, bad configuration\n");
 		return ERROR_BAD_CONFIGURATION;
 	}
-	dstring_struct cbase_dir;
-	dstring_lazy_init(&cbase_dir);
-	if(!dstring_append(&cbase_dir, settings.configuration.code_base_dir)) {
-		fprintf(stderr, "Error appending code base dir\n");
-		return ERROR_OTHER;
-	}
-	if(!make_directory(&cbase_dir, "/generating")) {
-		fprintf(stderr, "Error making /generating directory\n");
-		return ERROR_OTHER;
-	}
-
-	if(!dstring_append(&cbase_dir, "/generating/gen.lock")) {
-		fprintf(stderr, "Error with lock directory\n");
-		return ERROR_OTHER;
-	}
-	int fd = open(cbase_dir.str, O_CREAT | O_EXCL);
-	if(fd == -1) {
-		fprintf(stderr, "Error getting lock!\n");
-		return 1;
-	} else {
-		int res = generate_site(&settings.configuration);
-		unlink(cbase_dir.str);
-		if(!res) {
-			fprintf(stderr, "Error generating site\n");
-			return ERROR_GENERATING_SITE;
-		}
-	}
-	dstring_free(&cbase_dir);
+	int res = generate_site(&settings.configuration);
 	dstring_free(&settings.configuration.raw_config_file);
-	return 0;
+	return res;
 }
