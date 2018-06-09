@@ -4,8 +4,7 @@ int remove_old_tag_files(site_content_struct* site_content, theme_struct* theme)
 
 	dstring_lazy_init(&tag_dir);
 
-	if(!dstring_append(&tag_dir, theme->html_base_dir.str)
-		|| !dstring_append(&tag_dir, "/tags/")) {
+	if(!dstring_append_printf(&tag_dir, "%s/tags/", theme->html_base_dir.str)) {
 		fprintf(stderr, "Error generating tags, tag_dir dstring append error\n");
 		dstring_free(&tag_dir);
 		return 0;
@@ -523,8 +522,7 @@ int generate_main_rss(configuration_struct* configuration, site_content_struct* 
 		dstring_free(&rss_feed);
 		return 0;
 	}
-	if(!dstring_append(&rss_filename, site_content->bright_theme.html_base_dir.str)
-		|| !dstring_append(&rss_filename, "/feed.rss")) {
+	if(!dstring_append_printf(&rss_filename, "%s/feed.rss", site_content->bright_theme.html_base_dir.str)) {
 		fprintf(stderr, "Error generating RSS, filename dstring append error\n");
 		dstring_free(&rss_feed);
 		dstring_free(&rss_filename);
