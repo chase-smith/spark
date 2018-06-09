@@ -9,4 +9,5 @@ int load_series(configuration_struct*, site_content_struct*);
 int load_misc_pages(configuration_struct*, site_content_struct*);
 int load_post_dates(configuration_struct*, site_content_struct*);
 int load_posts(configuration_struct*, site_content_struct*);
+int load_site_content(configuration_struct*, site_content_struct*);
 #endif

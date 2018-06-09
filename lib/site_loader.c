@@ -513,4 +513,38 @@ int load_posts(configuration_struct* configuration, site_content_struct* site_co
 	return 1;
 	
 }
-
+int load_site_content(configuration_struct* configuration, site_content_struct* site_content) {
+	if(!do_pre_validations(configuration)) {
+		return 0;
+	}
+	if(!load_themes(configuration, site_content)) {
+		fprintf(stderr, "Error loading themes\n");
+		return 0;
+	}
+	if(!load_html_components(configuration, site_content)) {
+		fprintf(stderr, "Error loading HTML components\n");
+		return 0;
+	}
+	if(!load_misc_pages(configuration, site_content)) {
+		fprintf(stderr, "Error loading misc_pages\n");
+		return 0;
+	}
+	// We DO require a misc_page for index.html
+	if(!find_misc_page_by_filename(site_content, "index.html")) {
+		fprintf(stderr, "Error, missing index.html misc_page\n");
+		return 0;
+	}
+	if(!load_series(configuration, site_content)) {
+		fprintf(stderr, "Error loading series data\n");
+		return 0;
+	}
+	if(!load_posts(configuration, site_content)) {
+		fprintf(stderr, "Error loading posts\n");
+		return 0;
+	}
+	if(!site_content_setup_tags(site_content)) {
+		fprintf(stderr, "Error setting up tags\n");
+		return 0;
+	}
+	return 1;
+}

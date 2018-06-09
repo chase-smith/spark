@@ -542,44 +542,10 @@ int generate_main_rss(configuration_struct* configuration, site_content_struct* 
 }
 
 int generate_site_internal(configuration_struct* configuration) {
-	if(!do_pre_validations(configuration)) {
-		return 0;
-	}
 	site_content_struct site_content;
 	site_content_init(&site_content);
-	if(!load_themes(configuration, &site_content)) {
-		fprintf(stderr, "Error loading themes\n");
-		site_content_free(&site_content);
-		return 0;
-	}
-	if(!load_html_components(configuration, &site_content)) {
-		fprintf(stderr, "Error loading HTML components\n");
-		site_content_free(&site_content);
-		return 0;
-	}
-	if(!load_misc_pages(configuration, &site_content)) {
-		fprintf(stderr, "Error loading misc_pages\n");
-		site_content_free(&site_content);
-		return 0;
-	}
-	// We DO require a misc_page for index.html
-	if(!find_misc_page_by_filename(&site_content, "index.html")) {
-		fprintf(stderr, "Error, missing index.html misc_page\n");
-		site_content_free(&site_content);
-		return 0;
-	}
-	if(!load_series(configuration, &site_content)) {
-		fprintf(stderr, "Error loading series data\n");
-		site_content_free(&site_content);
-		return 0;
-	}
-	if(!load_posts(configuration, &site_content)) {
-		fprintf(stderr, "Error loading posts\n");
-		site_content_free(&site_content);
-		return 0;
-	}
-	if(!site_content_setup_tags(&site_content)) {
-		fprintf(stderr, "Error setting up tags\n");
+	if(!load_site_content(configuration, &site_content)) {
+		fprintf(stderr, "Error loading site content\n");
 		site_content_free(&site_content);
 		return 0;
 	}
@@ -616,7 +582,19 @@ int generate_site_internal(configuration_struct* configuration) {
 	site_content_free(&site_content);
 	return 1;
 }
-
+// TODO: I don't like how the site generator is also responsible for
+// loading in the site. Ideally, I'd have two public functions for
+// generating a site: one for where all the files are on disk,
+// and you present it a configuration and it loads everything in,
+// and the other where you present it a configuration and a
+// site_content_struct that's already got data loaded in, such as
+// if it were to be generated completely programmatically.
+// Now, in the latter case, you still need a place on disk for
+// the /generating/ folder, so that the lock file and the post dates
+// file can go in there; however, I may be able to get around that
+// requirement by piping the dates to `date`, if possible,
+// and by just not having a lock. Perhaps I'll wait to allow
+// the latter case until I figure that part out.
 int generate_site(configuration_struct* configuration) {
 	dstring_struct cbase_dir;
 	dstring_lazy_init(&cbase_dir);
