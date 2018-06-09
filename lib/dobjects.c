@@ -297,6 +297,45 @@ int dstring_write_file(dstring_struct* dstring, const char* file) {
 	}
 	return (num_chars_written == dstring->length);
 }
+// Returns 1 if different, -1 if error, 0 if the same.
+int dstring_compare_to_file(dstring_struct* dstring, const char* filename) {
+	FILE* fd = fopen(filename, "r");
+	if(!fd) {
+		fprintf(stderr, "Unable to open file %s\n", filename);
+		return -1;
+	}
+	fseek(fd, 0L, SEEK_END);
+	size_t file_size = (size_t) ftell(fd);
+	rewind(fd);
+	if(file_size != dstring->length) {
+		fclose(fd);
+		return 1;
+	}
+	char read_buffer[DSTRING_FILE_READ_BLOCK_SIZE];
+	char* current_location = dstring->str;
+	int different = 0;
+	do {
+		size_t bytes_read = fread(read_buffer, 1, DSTRING_FILE_READ_BLOCK_SIZE, fd);
+		if(bytes_read == 0) break;
+		if(strncmp(read_buffer, current_location, bytes_read)) {
+			different = 1;
+			break;
+		}
+		current_location += bytes_read;
+		if(bytes_read < DSTRING_FILE_READ_BLOCK_SIZE) {
+			break;
+		}
+	} while(1);
+	if(ferror(fd)) {
+		fprintf(stderr, "Bailing out of comparing file %s because error while reading\n", filename);
+		fclose(fd);
+		return -1;
+	}
+	fclose(fd);
+	return different;
+	
+	
+}
 // Returns 0 if error, 1 otherwise; check did_write to see if the file was
 // actually written.
 int dstring_write_file_if_different(dstring_struct* dstring, const char* filename, int* did_write) {
@@ -306,13 +345,11 @@ int dstring_write_file_if_different(dstring_struct* dstring, const char* filenam
 
 	int need_to_write = 1;
 	if(!access(filename, F_OK)) {
-		if(!dstring_read_file(&file_contents, filename)) {
-			fprintf(stderr, "Error writing file, couldn't read existing file\n");
-			dstring_free(&file_contents);
+		int res = dstring_compare_to_file(dstring, filename);
+		if(res == -1) {
 			return 0;
-		}
-		if(!strcmp(file_contents.str, dstring->str)) {
-			need_to_write = 0;
+		} else {
+			need_to_write = res;
 		}
 		
 	} else {
