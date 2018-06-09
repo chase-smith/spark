@@ -66,6 +66,7 @@ void darray_of_dstrings_free(darray_struct*);
 dstring_struct* dstring_resize(dstring_struct*, size_t);
 dstring_struct* dstring_append(dstring_struct*, const char*) __attribute__((hot));
 dstring_struct* dstring_append_printf(dstring_struct*, const char*, ...) __attribute__((hot));
+dstring_struct* dstring_append_vaprintf(dstring_struct*, const char*, va_list);
 void dstring_remove_num_chars_in_text(dstring_struct*, const char*);
 dstring_struct* dstring_read_file(dstring_struct*, const char*);
 dstring_struct* dstring_read_process_output(dstring_struct*, FILE*, int*);

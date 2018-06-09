@@ -194,26 +194,9 @@ dstring_struct* dstring_append(dstring_struct* dstring, const char* text) {
 dstring_struct* dstring_append_printf(dstring_struct* dstring, const char* format, ...) {
 	va_list argptr;
 	va_start(argptr, format);
-	// Going to use this to determine how much space is actually needed
-	char buff[3];
-	size_t num_needed = vsnprintf(buff, 2, format, argptr);
+	dstring_struct* res = dstring_append_vaprintf(dstring, format, argptr);
 	va_end(argptr);
-	// I might be adding an extra byte here, but I don't really care... Better
-	// safe than sorry.
-	if((dstring->total_length - dstring->length) < (num_needed + 1)) {
-		if(!dstring_resize(dstring, num_needed)) {
-			return NULL;
-		}
-	}
-	va_list argptr2;
-	va_start(argptr2, format);
-	int num_written = vsnprintf(&dstring->str[dstring->length], num_needed+1, format, argptr2);
-	if(num_written < 0) {
-		return NULL;
-	}
-	dstring->length += num_written;
-	va_end(argptr2);
-	return dstring;
+	return res;
 }
 dstring_struct* dstring_append_vaprintf(dstring_struct* dstring, const char* format, va_list args) {
 	va_list argptr;
