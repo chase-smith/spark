@@ -80,5 +80,8 @@ int main(int argc, char* argv[]) {
 	}
 	int res = generate_site(&settings.configuration);
 	dstring_free(&settings.configuration.raw_config_file);
-	return res;
+	if(!res) {
+		return ERROR_GENERATING_SITE;
+	}
+	return 0;
 }
