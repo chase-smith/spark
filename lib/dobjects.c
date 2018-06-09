@@ -169,7 +169,7 @@ dstring_struct* dstring_resize(dstring_struct* dstring, size_t min_additional_by
 	// Don't give small strings excessive breathing room
 	if(dstring->total_length >= DSTRING_INCREMENT_SIZE) {
 		add_bytes += DSTRING_INCREMENT_SIZE;
-	} else {
+	} else if(dstring->total_length > 0) {
 		add_bytes += 50;
 	}
 	return dstring_resize_no_extra(dstring, add_bytes);
