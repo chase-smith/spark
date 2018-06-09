@@ -20,8 +20,8 @@ typedef struct page_generation_settings_struct {
 } page_generation_settings_struct;
 
 
-int create_page(site_content_struct*, dstring_struct*, theme_struct*, page_generation_settings_struct*);
-int create_page_wrapper(site_content_struct*, dstring_struct*, page_generation_settings_struct*, int);
+int create_page(site_content_struct*, dstringbuilder_struct*, theme_struct*, page_generation_settings_struct*);
+int create_page_wrapper(site_content_struct*, dstringbuilder_struct*, page_generation_settings_struct*, int);
 int create_misc_page(site_content_struct*, misc_page_struct*);
 int create_post_page_append_recommended_readings(dstring_struct*, darray_struct*, const char*);
 int create_post_page(site_content_struct*, post_struct*);

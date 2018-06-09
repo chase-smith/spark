@@ -190,6 +190,7 @@ dstring_struct* dstring_append(dstring_struct* dstring, const char* text) {
 	dstring->str[dstring->length] = '\0';
 	return dstring;
 }
+// TODO: This should call dstring_append_vaprintf
 dstring_struct* dstring_append_printf(dstring_struct* dstring, const char* format, ...) {
 	va_list argptr;
 	va_start(argptr, format);
@@ -212,6 +213,27 @@ dstring_struct* dstring_append_printf(dstring_struct* dstring, const char* forma
 	}
 	dstring->length += num_written;
 	va_end(argptr2);
+	return dstring;
+}
+dstring_struct* dstring_append_vaprintf(dstring_struct* dstring, const char* format, va_list args) {
+	va_list argptr;
+	va_copy(argptr, args);
+	// Going to use this to determine how much space is actually needed
+	char buff[3];
+	size_t num_needed = vsnprintf(buff, 2, format, argptr);
+	va_end(argptr);
+	// I might be adding an extra byte here, but I don't really care... Better
+	// safe than sorry.
+	if((dstring->total_length - dstring->length) < (num_needed + 1)) {
+		if(!dstring_resize(dstring, num_needed)) {
+			return NULL;
+		}
+	}
+	int num_written = vsnprintf(&dstring->str[dstring->length], num_needed+1, format, args);
+	if(num_written < 0) {
+		return NULL;
+	}
+	dstring->length += num_written;
 	return dstring;
 }
 // Will shift the null byte and length back. Will stop at 0.
@@ -467,4 +489,278 @@ darray_struct* dstring_split_to_darray(dstring_struct* dstring, darray_struct* d
 		}
 	}
 	return darray;
+}
+
+#define DSTRINGBUILDER_INTERNAL_DSTRING 0
+#define DSTRINGBUILDER_INTERNAL_DSTRINGBUILDER 1
+
+typedef struct dstringbuilder_internal_struct {
+	int type;
+	// Existing items appended won't be freed, new items created
+	// by this dstringbuilder will be freed when the dstringbuilder is freed.
+	int can_free;
+	// Anonymous union, used because this can only be one or the other,
+	// so no need to have a NULL pointer for the one that's not in use
+	union {
+		dstring_struct* dstring;
+		dstringbuilder_struct* dstringbuilder;
+	};
+} dstringbuilder_internal_struct;
+
+dstringbuilder_internal_struct* dstringbuilder_get_internal(dstringbuilder_struct* dstringbuilder, size_t index) {
+	return (dstringbuilder_internal_struct*) darray_get_elem(&dstringbuilder->array, index);
+}
+
+void dstringbuilder_init(dstringbuilder_struct* dstringbuilder) {
+	darray_lazy_init(&dstringbuilder->array, sizeof(dstringbuilder_internal_struct));
+	dstringbuilder->current_dstring = NULL;
+}
+void dstringbuilder_free(dstringbuilder_struct* dstringbuilder) {
+	dstringbuilder->current_dstring = NULL;
+
+	for(size_t i = 0; i < dstringbuilder->array.length; i++) {
+		dstringbuilder_internal_struct* dsbi = dstringbuilder_get_internal(dstringbuilder, i);
+		// Skip items we didn't create
+		if(!dsbi->can_free) continue;
+
+		if(dsbi->type == DSTRINGBUILDER_INTERNAL_DSTRING) {
+			dstring_free(dsbi->dstring);
+			free(dsbi->dstring);
+		} else {
+			dstringbuilder_free(dsbi->dstringbuilder);
+			free(dsbi->dstringbuilder);
+		}
+	}
+	darray_free(&dstringbuilder->array);
+}
+dstring_struct* dstringbuilder_append_dstring(dstringbuilder_struct* dstringbuilder, dstring_struct* dstring) {
+	dstringbuilder->current_dstring = NULL;
+
+	dstringbuilder_internal_struct dsbi;
+	dsbi.type = DSTRINGBUILDER_INTERNAL_DSTRING;
+	dsbi.can_free = 0;
+	dsbi.dstring = dstring;
+
+	if(!darray_append(&dstringbuilder->array, &dsbi)) {
+		return NULL;
+	}
+	return dstring;
+}
+dstringbuilder_struct* dstringbuilder_append_dstringbuilder(dstringbuilder_struct* dstringbuilder, dstringbuilder_struct* append_me) {
+	dstringbuilder->current_dstring = NULL;
+
+	dstringbuilder_internal_struct dsbi;
+	dsbi.type = DSTRINGBUILDER_INTERNAL_DSTRINGBUILDER;
+	dsbi.can_free = 0;
+	dsbi.dstringbuilder = append_me;
+
+	if(!darray_append(&dstringbuilder->array, &dsbi)) {
+		return NULL;
+	}
+	return append_me;
+}
+dstring_struct* dstringbuilder_new_dstring(dstringbuilder_struct* dstringbuilder) {
+	dstring_struct* dstring = (dstring_struct*) malloc(sizeof(dstring_struct));
+	if(dstring == NULL) {
+		return NULL;
+	}
+	dstring_lazy_init(dstring);
+	dstringbuilder_internal_struct dsbi;
+	dsbi.type = DSTRINGBUILDER_INTERNAL_DSTRING;
+	dsbi.can_free = 1;
+	dsbi.dstring = dstring;
+
+	if(!darray_append(&dstringbuilder->array, &dsbi)) {
+		dstring_free(dstring);
+		free(dstring);
+		return NULL;
+	}
+	dstringbuilder->current_dstring = dstring;
+	return dstring;
+}
+dstringbuilder_struct* dstringbuilder_new_dstringbuilder(dstringbuilder_struct* dstringbuilder) {
+	dstringbuilder_struct* append_me = (dstringbuilder_struct*) malloc(sizeof(dstringbuilder_struct));
+	if(append_me == NULL) {
+		return NULL;
+	}
+	dstringbuilder_init(append_me);
+	dstringbuilder_internal_struct dsbi;
+	dsbi.type = DSTRINGBUILDER_INTERNAL_DSTRINGBUILDER;
+	dsbi.can_free = 1;
+	dsbi.dstringbuilder = append_me;
+
+	if(!darray_append(&dstringbuilder->array, &dsbi)) {
+		dstringbuilder_free(append_me);
+		free(append_me);
+		return NULL;
+	}
+	dstringbuilder->current_dstring = NULL;
+	return append_me;
+}
+dstring_struct* dstringbuilder_append(dstringbuilder_struct* dstringbuilder, const char* str) {
+	if(dstringbuilder->current_dstring == NULL) {
+		dstring_struct* res = dstringbuilder_new_dstring(dstringbuilder);
+		if(res == NULL) {
+			return NULL;
+		}
+	}
+	if(!dstring_append(dstringbuilder->current_dstring, str)) {
+		return NULL;
+	}
+	return dstringbuilder->current_dstring;
+}
+dstring_struct* dstringbuilder_append_printf(dstringbuilder_struct* dstringbuilder, const char* format, ...) {
+	if(dstringbuilder->current_dstring == NULL) {
+		dstring_struct* res = dstringbuilder_new_dstring(dstringbuilder);
+		if(res == NULL) {
+			return NULL;
+		}
+	}
+	
+	va_list argptr;
+	va_start(argptr, format);
+	dstring_struct* res = dstring_append_vaprintf(dstringbuilder->current_dstring, format, argptr);
+	va_end(argptr);
+	if(res == NULL) {
+		return NULL;
+	}
+	return dstringbuilder->current_dstring;
+}
+
+size_t dstringbuilder_get_length(dstringbuilder_struct* dstringbuilder) {
+	size_t length = 0;
+	for(size_t i = 0; i < dstringbuilder->array.length; i++) {
+		dstringbuilder_internal_struct* dsbi = dstringbuilder_get_internal(dstringbuilder, i);
+
+		if(dsbi->type == DSTRINGBUILDER_INTERNAL_DSTRING) {
+			length += dsbi->dstring->length;
+		} else {
+			length += dstringbuilder_get_length(dsbi->dstringbuilder);
+		}
+	}
+	return length;
+}
+dstring_struct* dstringbuilder_internal_form(dstringbuilder_struct* dstringbuilder, dstring_struct* append_to_dstring) {
+	for(size_t i = 0; i < dstringbuilder->array.length; i++) {
+		dstringbuilder_internal_struct* dsbi = dstringbuilder_get_internal(dstringbuilder, i);
+
+		if(dsbi->type == DSTRINGBUILDER_INTERNAL_DSTRING) {
+			if(!dstring_append(append_to_dstring, dsbi->dstring->str)) {
+				return NULL;
+			}
+		} else {
+			if(!dstringbuilder_internal_form(dsbi->dstringbuilder, append_to_dstring)) {
+				return NULL;
+			}
+		}
+	}
+	return append_to_dstring;
+}
+dstring_struct* dstringbuilder_form(dstringbuilder_struct* dstringbuilder) {
+	dstring_struct* dstring = (dstring_struct*) malloc(sizeof(dstring_struct));
+	if(dstring == NULL) {
+		return NULL;
+	}
+	if(!dstring_init_with_size(dstring, dstringbuilder_get_length(dstringbuilder) + 1)) {
+		free(dstring);
+		return NULL;
+	}
+	if(!dstringbuilder_internal_form(dstringbuilder, dstring)) {
+		dstring_free(dstring);
+		free(dstring);
+		return NULL;
+	}
+	return dstring;
+}
+
+int dstringbuilder_internal_compare_to_file(dstringbuilder_struct* dstringbuilder, FILE* fd) {
+	for(size_t i = 0; i < dstringbuilder->array.length; i++) {
+		dstringbuilder_internal_struct* dsbi = dstringbuilder_get_internal(dstringbuilder, i);
+
+		if(dsbi->type == DSTRINGBUILDER_INTERNAL_DSTRING) {
+			char read_buffer[DSTRING_FILE_READ_BLOCK_SIZE];
+			char* current_location = dsbi->dstring->str;
+			size_t current_location_pos = 0;
+			do {
+				size_t bytes_to_read = DSTRING_FILE_READ_BLOCK_SIZE;
+				if((dsbi->dstring->length - current_location_pos) < DSTRING_FILE_READ_BLOCK_SIZE) {
+					bytes_to_read = (dsbi->dstring->length - current_location_pos);
+				}
+				size_t bytes_read = fread(read_buffer, 1, bytes_to_read, fd);
+				if(bytes_read == 0) break;
+				if(strncmp(read_buffer, current_location, bytes_read)) {
+					return 1;
+				}
+				current_location += bytes_read;
+				current_location_pos += bytes_read;
+				if(bytes_read < bytes_to_read) {
+					break;
+				}
+			} while(current_location_pos < dsbi->dstring->length);
+			if(ferror(fd)) {
+				return -1;
+			}
+		} else {
+			int res = dstringbuilder_internal_compare_to_file(dsbi->dstringbuilder, fd);
+			if(res != 0) {
+				printf("HEY!\n");
+				return res;
+			}
+		}
+	}
+	return 0;
+}
+
+// Returns 1 if different, -1 if error, 0 if the same.
+int dstringbuilder_compare_to_file(dstringbuilder_struct* dstringbuilder, const char* filename) {
+	FILE* fd = fopen(filename, "r");
+	if(!fd) {
+		fprintf(stderr, "Unable to open file %s\n", filename);
+		return -1;
+	}
+	fseek(fd, 0L, SEEK_END);
+	size_t file_size = (size_t) ftell(fd);
+	rewind(fd);
+	if(file_size != dstringbuilder_get_length(dstringbuilder)) {
+		fclose(fd);
+		return 1;
+	}
+	int res = dstringbuilder_internal_compare_to_file(dstringbuilder, fd);
+	fclose(fd);
+	return res;
+}
+// Returns 0 if error, 1 otherwise; check did_write to see if the file was
+// actually written.
+int dstringbuilder_write_file_if_different(dstringbuilder_struct* dstringbuilder, const char* filename, int* did_write) {
+	(*did_write) = 0;
+
+	int need_to_write = 1;
+	if(!access(filename, F_OK)) {
+		int res = dstringbuilder_compare_to_file(dstringbuilder, filename);
+		if(res == -1) {
+			return 0;
+		} else {
+			need_to_write = res;
+		}
+		
+	} else {
+		printf("Creating file %s as it doesn't exist\n", filename);
+	}
+	if(need_to_write) {
+		dstring_struct* formed_dstring = dstringbuilder_form(dstringbuilder);
+		if(formed_dstring == NULL) {
+			fprintf(stderr, "Error writing file %s, couldn't form the dstringbuilder\n", filename);
+			return 0;
+		}
+		if(!dstring_write_file(formed_dstring, filename)) {
+			fprintf(stderr, "Error writing file %s\n", filename);
+			dstring_free(formed_dstring);
+			free(formed_dstring);
+			return 0;
+		}
+		(*did_write) = 1;
+		dstring_free(formed_dstring);
+		free(formed_dstring);
+	}
+	return 1;
 }

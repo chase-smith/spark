@@ -42,6 +42,10 @@ typedef struct darray_struct {
 	size_t elem_size;
 } darray_struct;
 
+typedef struct dstringbuilder_struct {
+	darray_struct array;
+	dstring_struct* current_dstring;
+} dstringbuilder_struct;
 
 
 darray_struct* darray_init_with_size(darray_struct*, size_t, size_t);
@@ -72,4 +76,18 @@ int darray_test();
 int dstring_try_load_file(dstring_struct*, dstring_struct*, const char*, const char*);
 void dstring_remove_trailing_newlines(dstring_struct*);
 darray_struct* dstring_split_to_darray(dstring_struct*, darray_struct*, char);
+
+
+void dstringbuilder_init(dstringbuilder_struct*);
+void dstringbuilder_free(dstringbuilder_struct*);
+dstring_struct* dstringbuilder_append_dstring(dstringbuilder_struct*, dstring_struct*);
+dstring_struct* dstringbuilder_new_dstring(dstringbuilder_struct*);
+dstring_struct* dstringbuilder_append(dstringbuilder_struct*, const char*);
+dstring_struct* dstringbuilder_append_printf(dstringbuilder_struct*, const char*, ...);
+dstringbuilder_struct* dstringbuilder_append_dstringbuilder(dstringbuilder_struct*, dstringbuilder_struct*);
+dstringbuilder_struct* dstringbuilder_new_dstringbuilder(dstringbuilder_struct*);
+
+size_t dstringbuilder_get_length(dstringbuilder_struct*);
+dstring_struct* dstringbuilder_form(dstringbuilder_struct*);
+int dstringbuilder_write_file_if_different(dstringbuilder_struct*, const char*, int*);
 #endif
