@@ -5,6 +5,7 @@
 #include "file_helpers.h"
 #include "html_page_creators.h"
 #include "site_configuration.h"
+#include "site_loader.h"
 
 int remove_old_tag_files(site_content_struct*, theme_struct*);
 int generate_tags(site_content_struct*);
@@ -16,5 +17,5 @@ int generate_series(site_content_struct*);
 int generate_sitemap(site_content_struct*);
 int write_rss_file_if_different(dstring_struct*, const char*, int*);
 int generate_main_rss(configuration_struct*, site_content_struct*);
-
+int generate_site(configuration_struct*);
 #endif

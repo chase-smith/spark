@@ -541,3 +541,78 @@ int generate_main_rss(configuration_struct* configuration, site_content_struct* 
 		
 }
 
+int generate_site(configuration_struct* configuration) {
+	if(!do_pre_validations(configuration)) {
+		return 0;
+	}
+	site_content_struct site_content;
+	site_content_init(&site_content);
+	if(!load_themes(configuration, &site_content)) {
+		fprintf(stderr, "Error loading themes\n");
+		site_content_free(&site_content);
+		return 0;
+	}
+	if(!load_html_components(configuration, &site_content)) {
+		fprintf(stderr, "Error loading HTML components\n");
+		site_content_free(&site_content);
+		return 0;
+	}
+	if(!load_misc_pages(configuration, &site_content)) {
+		fprintf(stderr, "Error loading misc_pages\n");
+		site_content_free(&site_content);
+		return 0;
+	}
+	// We DO require a misc_page for index.html
+	if(!find_misc_page_by_filename(&site_content, "index.html")) {
+		fprintf(stderr, "Error, missing index.html misc_page\n");
+		site_content_free(&site_content);
+		return 0;
+	}
+	if(!load_series(configuration, &site_content)) {
+		fprintf(stderr, "Error loading series data\n");
+		site_content_free(&site_content);
+		return 0;
+	}
+	if(!load_posts(configuration, &site_content)) {
+		fprintf(stderr, "Error loading posts\n");
+		site_content_free(&site_content);
+		return 0;
+	}
+	if(!site_content_setup_tags(&site_content)) {
+		fprintf(stderr, "Error setting up tags\n");
+		site_content_free(&site_content);
+		return 0;
+	}
+	if(!generate_tags(&site_content)) {
+		fprintf(stderr, "Error generating tags\n");
+		site_content_free(&site_content);
+		return 0;
+	}
+	if(!generate_misc_pages(&site_content)) {
+		fprintf(stderr, "Error generating misc_pages\n");
+		site_content_free(&site_content);
+		return 0;
+	}
+	if(!generate_posts(&site_content)) {
+		fprintf(stderr, "Error generating posts\n");
+		site_content_free(&site_content);
+		return 0;
+	}
+	if(!generate_series(&site_content)) {
+		fprintf(stderr, "Error generating series\n");
+		site_content_free(&site_content);
+		return 0;
+	}
+	if(!generate_sitemap(&site_content)) {
+		fprintf(stderr, "Error generating sitemap\n");
+		site_content_free(&site_content);
+		return 0;
+	}
+	if(!generate_main_rss(configuration, &site_content)) {
+		fprintf(stderr, "Error generating RSS\n");
+		site_content_free(&site_content);
+		return 0;
+	}
+	site_content_free(&site_content);
+	return 1;
+}
