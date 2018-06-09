@@ -2,49 +2,28 @@
 
 #define _BSD_SOURCE
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/file.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <dirent.h>
-#include <time.h>
-#include <stdarg.h>
 #include "dobjects.h"
-#include "core_objects.h"
-#include "post.h"
 #include "param_parser.h"
-#include "file_helpers.h"
-#include "html_page_creators.h"
 #include "site_configuration.h"
 #include "site_generator.h"
-#include "site_loader.h"
 
 #define ERROR_BAD_PARAMETERS 1
 #define ERROR_BAD_CONFIGURATION 2
 #define ERROR_GENERATING_SITE 3
 #define ERROR_OTHER 4
 
-
 // GENERAL TODO: Fix includes across all files, some files include
 // things they don't need.
 
-
-
 typedef struct settings_struct {
 	char* config_file;
-	configuration_struct configuration;
 	int show_help;
 } settings_struct;
 
-
-
-
-
 void show_help() {
-	printf("--config <config file> [--only-generate-if-publishable-posts-changes]\n");
+	printf("spark --config <config file>\n\n");
+	printf("Spark is a dual-themed static blog site generator.\n");
 }
 
 int get_parameters(settings_struct* settings, int argc, char* argv[]) {
@@ -61,25 +40,30 @@ int get_parameters(settings_struct* settings, int argc, char* argv[]) {
 }
 
 
-
-
-
 int main(int argc, char* argv[]) {
 	// TODO: Set proper permissions on all created directories and files.
 	settings_struct settings;
+
+	// Offset by 1 because we don't want to pass the program name
 	if(!get_parameters(&settings, argc-1, &argv[1])) {
 		fprintf(stderr, "Error, bad parameters\n");
 		return ERROR_BAD_PARAMETERS;
 	}
+
 	if(settings.show_help) {
 		return 0;
 	}
-	if(!load_configuration(&settings.configuration, settings.config_file)) {
+
+	configuration_struct configuration;
+	if(!load_configuration(&configuration, settings.config_file)) {
 		fprintf(stderr, "Error, bad configuration\n");
 		return ERROR_BAD_CONFIGURATION;
 	}
-	int res = generate_site(&settings.configuration);
-	dstring_free(&settings.configuration.raw_config_file);
+
+	int res = generate_site(&configuration);
+
+	dstring_free(&configuration.raw_config_file);
+
 	if(!res) {
 		return ERROR_GENERATING_SITE;
 	}
