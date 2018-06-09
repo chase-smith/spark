@@ -25,12 +25,9 @@ int create_page(site_content_struct* site_content, dstring_struct* page_content,
 
 	CREATE_PAGE_APPEND("</head>", "end head")
 
-	CREATE_PAGE_APPEND("<style>", "style section")
-	CREATE_PAGE_APPEND(theme->main_css.str, "style section")
-	if(page_generation_settings->has_code) {
-		CREATE_PAGE_APPEND(theme->syntax_highlighting_css.str, "style section")
-	}
-	CREATE_PAGE_APPEND("</style>", "style section")
+	CREATE_PAGE_PRINTF_APPEND("style section", "<style>%s%s</style>",
+				theme->main_css.str,
+				page_generation_settings->has_code ? theme->syntax_highlighting_css.str : "")
 	
 	CREATE_PAGE_APPEND("<body>", "body begin")
 
@@ -48,9 +45,7 @@ int create_page(site_content_struct* site_content, dstring_struct* page_content,
 
 #undef CREATE_PAGE_APPEND
 #undef CREATE_PAGE_PRINTF_APPEND
-	if(!dstring_append(&dest_filename, theme->html_base_dir.str)
-		|| !dstring_append(&dest_filename, "/")
-		|| !dstring_append(&dest_filename, page_generation_settings->filename)) {
+	if(!dstring_append_printf(&dest_filename, "%s/%s", theme->html_base_dir.str, page_generation_settings->filename)) {
 		fprintf(stderr, "Error generating page, dstring append error\n");
 		dstring_free(&page);
 		dstring_free(&dest_filename);
@@ -89,10 +84,7 @@ int create_page_wrapper(site_content_struct* site_content, dstring_struct* page_
 		dstring_free(&wrapped_page);
 		return PAGE_GENERATION_FAILURE;
 	}
-	if(!dstring_append(&canonical_url, "https://")
-		|| !dstring_append(&canonical_url, site_content->bright_theme.host.str)
-		|| !dstring_append(&canonical_url, "/")
-		|| !dstring_append(&canonical_url, page_generation_settings->url_path)) {
+	if(!dstring_append_printf(&canonical_url, "https://%s/%s", site_content->bright_theme.host.str, page_generation_settings->url_path)) {
 		fprintf(stderr, "Error creating page, canonical url dstring append error\n");
 		dstring_free(&wrapped_page);
 		dstring_free(&canonical_url);
@@ -156,12 +148,10 @@ int create_misc_page(site_content_struct* site_content, misc_page_struct* misc_p
 int create_post_page_append_recommended_readings(dstring_struct* page, darray_struct* recommendations, const char* recommendation_type) {
 	int num_posts_added = 0;
 	for(size_t i = 0; i < recommendations->length; i++) {
-		post_struct* recommended_post = *((post_struct**) darray_get_elem(recommendations, i));
+		post_struct* recommended_post = post_get_from_darray_of_post_pointers(recommendations, i);
 		if(!recommended_post->can_publish) continue;
 		if(num_posts_added == 0) {
-			if(!dstring_append(page, "<div class=\"s_p_reading\">Suggested ")
-				|| !dstring_append(page, recommendation_type)
-				|| !dstring_append(page, " reading: ")) {
+			if(!dstring_append_printf(page, "<div class=\"s_p_reading\">Suggested %s reading: ", recommendation_type)) {
 				fprintf(stderr, "Error appending post recommendations\n");
 				return 0;
 			}
@@ -172,11 +162,9 @@ int create_post_page_append_recommended_readings(dstring_struct* page, darray_st
 				return 0;
 			}
 		}
-		if(!dstring_append(page, "<a href=\"/posts/")
-			|| !dstring_append(page, recommended_post->folder_name.str)
-			|| !dstring_append(page, "\">")
-			|| !dstring_append(page, recommended_post->title.str)
-			|| !dstring_append(page, "</a>")) {
+		if(!dstring_append_printf(page, "<a href=\"/posts/%s\">%s</a>",
+					recommended_post->folder_name.str,
+					recommended_post->title.str)) {
 			fprintf(stderr, "Error appending post recommendations\n");
 			return 0;
 		}
@@ -201,8 +189,7 @@ int create_post_page(site_content_struct* site_content, post_struct* post) {
 	dstring_lazy_init(&url_path);
 	dstring_lazy_init(&filename);
 
-	if(!dstring_append(&url_path, "posts/")
-		|| !dstring_append(&url_path, post->folder_name.str)) {
+	if(!dstring_append_printf(&url_path, "posts/%s", post->folder_name.str)) {
 		fprintf(stderr, "Error creating post page, dstring append error\n");
 		dstring_free(&page);
 		dstring_free(&tags);
@@ -210,8 +197,7 @@ int create_post_page(site_content_struct* site_content, post_struct* post) {
 		dstring_free(&filename);
 		return PAGE_GENERATION_FAILURE;
 	}
-	if(!dstring_append(&filename, url_path.str)
-		|| !dstring_append(&filename, ".html")) {
+	if(!dstring_append_printf(&filename, "%s.html", url_path.str)) {
 		fprintf(stderr, "Error creating post page, dstring append error\n");
 		dstring_free(&page);
 		dstring_free(&tags);
@@ -221,11 +207,7 @@ int create_post_page(site_content_struct* site_content, post_struct* post) {
 	}
 #define CREATE_POST_PAGE_APPEND(appending, err_message) if(!dstring_append(&page, appending)) { fprintf(stderr, "Error creating page, couldn't append %s\n", err_message); dstring_free(&page); dstring_free(&tags); dstring_free(&url_path); dstring_free(&filename); return PAGE_GENERATION_FAILURE; }
 #define CREATE_POST_PAGE_PRINTF_APPEND(err_message, format, args...) if(!dstring_append_printf(&page, format, args)) { fprintf(stderr, "Error creating page, couldn't append %s\n", err_message); dstring_free(&page); dstring_free(&tags); dstring_free(&url_path); dstring_free(&filename); return PAGE_GENERATION_FAILURE; }
-	CREATE_POST_PAGE_APPEND("<article>\n", "article begin")
-	CREATE_POST_PAGE_APPEND("<header>\n", "header begin")
-	CREATE_POST_PAGE_APPEND("<h1>", "post header")
-	CREATE_POST_PAGE_APPEND(post->title.str, "post header")
-	CREATE_POST_PAGE_APPEND("</h1>\n", "post header")
+	CREATE_POST_PAGE_PRINTF_APPEND("article begin", "<article>\n<header>\n<h1>%s</h1>\n", post->title.str)
 	if(!create_post_page_append_recommended_readings(&page, &post->suggested_prev_reading, "previous")) {
 		fprintf(stderr, "Error creating post page, couldn't append suggested previous readings\n");
 		dstring_free(&page);
