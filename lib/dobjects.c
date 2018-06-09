@@ -190,7 +190,6 @@ dstring_struct* dstring_append(dstring_struct* dstring, const char* text) {
 	dstring->str[dstring->length] = '\0';
 	return dstring;
 }
-// TODO: This should call dstring_append_vaprintf
 dstring_struct* dstring_append_printf(dstring_struct* dstring, const char* format, ...) {
 	va_list argptr;
 	va_start(argptr, format);
