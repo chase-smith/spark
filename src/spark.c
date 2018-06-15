@@ -19,6 +19,7 @@
 typedef struct settings_struct {
 	char* config_file;
 	int show_help;
+	int generate_site;
 } settings_struct;
 
 void show_help() {
@@ -34,6 +35,13 @@ int get_parameters(settings_struct* settings, int argc, char* argv[]) {
 	
 	if(!paramparser_get_string(argc, argv, "--config", &settings->config_file, PARAMPARSER_REQUIRED)) {
 		fprintf(stderr, "Missing required parameter --config\n");
+		return 0;
+	}
+	paramparser_get_flag(argc, argv, "--generate-site", &settings->generate_site);
+	// Presently this is the only action, so if it's not given,
+	// then that's a problem
+	if(!settings->generate_site) {
+		fprintf(stderr, "Missing required parameter --generate-site\n");
 		return 0;
 	}
 	return 1;
@@ -59,12 +67,14 @@ int main(int argc, char* argv[]) {
 		fprintf(stderr, "Error, bad configuration\n");
 		return ERROR_BAD_CONFIGURATION;
 	}
-
-	int res = generate_site(&configuration);
+	int res = 0;
+	if(settings.generate_site) {
+		res = generate_site(&configuration);
+	}
 
 	dstring_free(&configuration.raw_config_file);
 
-	if(!res) {
+	if(!res && settings.generate_site) {
 		return ERROR_GENERATING_SITE;
 	}
 	return 0;

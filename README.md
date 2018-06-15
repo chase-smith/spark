@@ -130,7 +130,7 @@ Run `./compile`; this will create a folder `bin/` in this directory, and populat
 Create the folder/file structures defined above (I'll eventually add in an example site to this repository).
 Create a configuration file as defined above.
 
-Run the `spark` executable compiled above, passing it `--config /path/to/your/site/config/file` (putting in your site configuration file as appropriate).
+Run the `spark` executable compiled above, passing it `--config /path/to/your/site/config/file --generate-site` (putting in your site configuration file as appropriate).
 
 # Issues and bugs
 When checking the existing RSS file against the newly generated one, to see if it needs to be written out, I don't do proper bounds checking. This will lead to a crash only if the existing RSS file is malformed.
