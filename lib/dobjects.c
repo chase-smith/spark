@@ -1,5 +1,13 @@
 #include "dobjects.h"
 
+// EMPTY_STRING is used in dstring_lazy_init; the idea is that
+// we don't want to actually allocate any memory for the dstring yet
+// (hence 'lazy'), but we also don't want that the dstring be invalid.
+// By this, I mean, should you choose to print out the dstring immediately
+// after initializing it, or if you pass it to something that does a strlen()
+// operation or something on it, I don't want you to get a segmentation fault.
+// So, by having it instead point to this empty string, you can use it
+// as a dstring of length 0.
 static const char EMPTY_STRING[] = "";
 
 
@@ -28,20 +36,27 @@ void darray_lazy_init(darray_struct* darray, size_t elem_size) {
 	darray->array = NULL;
 }
 void darray_free(darray_struct* darray) {
+	darray->total_length = 0;
+	darray->length = 0;
+	darray->elem_size = 0;
+
+	// Return early if there's nothing to free, as is the case if the darray
+	// was lazily initialized.
 	if(darray->array == NULL) {
 		return;
 	}
 	free(darray->array);
 	darray->array = NULL;
-	darray->total_length = 0;
-	darray->length = 0;
-	darray->elem_size = 0;
 }
 
 // Will return NULL if unable to resize
 darray_struct* darray_increase_size_specific_amount(darray_struct* darray, size_t additional_elems) {
 	size_t new_elem_count = darray->total_length + additional_elems;
+
+	// Not immediately overwriting darray->array as in darray_init_with_size, as if
+	// realloc returns NULL, we then lose the original array.
 	void* new_pointer = realloc(darray->array, (new_elem_count * darray->elem_size));
+
 	if(new_pointer == NULL) {
 		fprintf(stderr, "Unable to increase size of darray\n");
 		return NULL;
@@ -54,8 +69,10 @@ darray_struct* darray_increase_size_specific_amount(darray_struct* darray, size_
 // Gives some breathing room when resizing.
 darray_struct* darray_increase_size(darray_struct* darray) {
 	size_t add_elems = 0;
+
+	// Smaller arrays are given less additional space
 	if(darray->total_length < DARRAY_INCREMENT_SIZE) {
-		add_elems = 5;
+		add_elems = DARRAY_SMALL_INCREMENT_SIZE;
 	} else {
 		add_elems = DARRAY_INCREMENT_SIZE;
 	}
@@ -76,10 +93,6 @@ darray_struct* darray_append(darray_struct* darray, const void* elem) {
 	darray->length++;
 	return darray;
 }
-// NO BOUNDS CHECKING IS DONE
-void* darray_get_elem(darray_struct* darray, size_t index) {
-	return darray->array + (index * darray->elem_size);
-}
 
 darray_struct* darray_clone(darray_struct* darray) {
 	darray_struct* new_darray = malloc(sizeof(darray_struct));
@@ -97,11 +110,9 @@ darray_struct* darray_clone(darray_struct* darray) {
 	return new_darray;
 }
 
-
-
-
 // Will return NULL if unable to init
 dstring_struct* dstring_init_with_size(dstring_struct* dstring, size_t initial_size) {
+	// +1 for null terminator
 	dstring->str = malloc(initial_size + 1);
 
 	if(!dstring->str) {
@@ -135,6 +146,7 @@ void dstring_free(dstring_struct* dstring) {
 		return;
 	}
 	free(dstring->str);
+	// Point it back to EMPTY_STRING just to be nice
 	dstring->str = (char*) EMPTY_STRING;
 	dstring->total_length = 0;
 	dstring->length = 0;
@@ -150,9 +162,16 @@ void darray_of_dstrings_free(darray_struct* darray) {
 // Will return NULL if unable to resize
 dstring_struct* dstring_resize_no_extra(dstring_struct* dstring, size_t additional_bytes) {
 	size_t new_size = dstring->total_length + additional_bytes;
+
+	// Set it to NULL so that realloc works
 	if(dstring->str == EMPTY_STRING) {
 		dstring->str = NULL;
 	}
+
+	// Don't immediately overwrite dstring->str so that if realloc returns
+	// NULL, we don't lose the string.
+	// Also, add 1 so that calling code doesn't have to account for the
+	// null terminator.
 	void* new_pointer = realloc(dstring->str, new_size + 1);
 	if(new_pointer == NULL) {
 		fprintf(stderr, "Unable to allocate more space for dstring\n");
@@ -166,11 +185,12 @@ dstring_struct* dstring_resize_no_extra(dstring_struct* dstring, size_t addition
 // Adds some extra breathing room when resizing. Returns NULL on error
 dstring_struct* dstring_resize(dstring_struct* dstring, size_t min_additional_bytes) {
 	size_t add_bytes = min_additional_bytes;
+
 	// Don't give small strings excessive breathing room
 	if(dstring->total_length >= DSTRING_INCREMENT_SIZE) {
 		add_bytes += DSTRING_INCREMENT_SIZE;
 	} else if(dstring->total_length > 0) {
-		add_bytes += 50;
+		add_bytes += DSTRING_SMALL_INCREMENT_SIZE;
 	}
 	return dstring_resize_no_extra(dstring, add_bytes);
 }
@@ -178,13 +198,12 @@ dstring_struct* dstring_resize(dstring_struct* dstring, size_t min_additional_by
 // Will return the dstring, or NULL if an error
 dstring_struct* dstring_append(dstring_struct* dstring, const char* text) {
 	size_t text_len = strlen(text);
-	// Check if too small
+	// Resize if too small
 	if((dstring->total_length - dstring->length) < (text_len + 1)) {
 		if(!dstring_resize(dstring, text_len)) {
 			return NULL;
 		}
 	}
-	//strncat(dstring->str, text, text_len);
 	memcpy(dstring->str + dstring->length, text, text_len);
 	dstring->length += text_len;
 	dstring->str[dstring->length] = '\0';
@@ -264,8 +283,10 @@ dstring_struct* dstring_read_process_output(dstring_struct* dstring, FILE* proce
 		fprintf(stderr, "Error reading process output, NULL FILE*\n");
 		return NULL;
 	}
+
+	// Read in the process output a chunk at a time
 	do {
-		// TODO: Shouldn't resize unless out of space, to respect smaller strings.
+		// Make sure there's enough room for the next chunk
 		if((dstring->total_length - dstring->length) < (DSTRING_FILE_READ_BLOCK_SIZE + 1)) {
 			if(!dstring_resize(dstring, DSTRING_FILE_READ_BLOCK_SIZE)) {
 				pclose(process_output);
@@ -273,12 +294,17 @@ dstring_struct* dstring_read_process_output(dstring_struct* dstring, FILE* proce
 				return NULL;
 			}
 		}
+
+		// Read in the next chunk
 		size_t bytes_read = fread(dstring->str + dstring->length, 1, DSTRING_FILE_READ_BLOCK_SIZE, process_output);
 		dstring->length += bytes_read;
+
 		if(bytes_read < DSTRING_FILE_READ_BLOCK_SIZE) {
 			break;
 		}
 	} while(1);
+
+
 	if(ferror(process_output)) {
 		fprintf(stderr, "Bailing out of reading process output into dstring because error while reading\n");
 		pclose(process_output);
@@ -290,12 +316,16 @@ dstring_struct* dstring_read_process_output(dstring_struct* dstring, FILE* proce
 // Will overwrite, not append.
 int dstring_write_file(dstring_struct* dstring, const char* file) {
 	FILE* fd = fopen(file, "w");
+
 	if(!fd) {
 		fprintf(stderr, "Unable to open file %s\n", file);
 		return 0;
 	}
+
+	// Write the entire file out at once
 	size_t num_chars_written = fwrite(dstring->str, sizeof(char), dstring->length, fd);
 	fclose(fd);
+
 	if(num_chars_written != dstring->length) {
 		fprintf(stderr, "Error writing file %s\n", file);
 	}
@@ -304,20 +334,30 @@ int dstring_write_file(dstring_struct* dstring, const char* file) {
 // Returns 1 if different, -1 if error, 0 if the same.
 int dstring_compare_to_file(dstring_struct* dstring, const char* filename) {
 	FILE* fd = fopen(filename, "r");
+
 	if(!fd) {
 		fprintf(stderr, "Unable to open file %s\n", filename);
 		return -1;
 	}
+
+	// Get the file size
 	fseek(fd, 0L, SEEK_END);
 	size_t file_size = (size_t) ftell(fd);
 	rewind(fd);
+
+	// If the file is not the same length as the string, then we don't have
+	// to compare their contents to know they're different
 	if(file_size != dstring->length) {
 		fclose(fd);
 		return 1;
 	}
+
+	// Compare the file a block at a time; there's no sense in consuming
+	// the extra memory needed to read the entire file into a dstring
 	char read_buffer[DSTRING_FILE_READ_BLOCK_SIZE];
 	char* current_location = dstring->str;
 	int different = 0;
+
 	do {
 		size_t bytes_read = fread(read_buffer, 1, DSTRING_FILE_READ_BLOCK_SIZE, fd);
 		if(bytes_read == 0) break;
@@ -330,6 +370,7 @@ int dstring_compare_to_file(dstring_struct* dstring, const char* filename) {
 			break;
 		}
 	} while(1);
+
 	if(ferror(fd)) {
 		fprintf(stderr, "Bailing out of comparing file %s because error while reading\n", filename);
 		fclose(fd);
@@ -337,8 +378,6 @@ int dstring_compare_to_file(dstring_struct* dstring, const char* filename) {
 	}
 	fclose(fd);
 	return different;
-	
-	
 }
 // Returns 0 if error, 1 otherwise; check did_write to see if the file was
 // actually written.
@@ -357,6 +396,7 @@ int dstring_write_file_if_different(dstring_struct* dstring, const char* filenam
 		}
 		
 	} else {
+		// TODO: This belongs in calling code
 		printf("Creating file %s as it doesn't exist\n", filename);
 	}
 	if(need_to_write) {
@@ -726,6 +766,7 @@ int dstringbuilder_write_file_if_different(dstringbuilder_struct* dstringbuilder
 		}
 		
 	} else {
+		// TODO: Move this to calling code.
 		printf("Creating file %s as it doesn't exist\n", filename);
 	}
 	if(need_to_write) {
@@ -746,3 +787,5 @@ int dstringbuilder_write_file_if_different(dstringbuilder_struct* dstringbuilder
 	}
 	return 1;
 }
+#undef DSTRINGBUILDER_INTERNAL_DSTRING
+#undef DSTRINGBUILDER_INTERNAL_DSTRINGBUILDER
