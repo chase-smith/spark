@@ -11,13 +11,9 @@ void tag_posts_init(tag_posts_struct* tag_posts) {
 }
 void tag_posts_print_debug(tag_posts_struct* tag_posts) {
 	printf("Tag: %s\n", tag_posts->tag.str);
-	printf("# elems: %zu\n", tag_posts->posts.length);
-	printf("elem size: %zu\n", tag_posts->posts.elem_size);
-	post_struct** posts = (post_struct**) tag_posts->posts.array;
+	printf("Number of posts: %zu\n", tag_posts->posts.length);
 	for(size_t i = 0; i < tag_posts->posts.length; i++) {
-		post_struct* p1 = (post_struct*) darray_get_elem(&tag_posts->posts, i);
-		post_struct* p2 = posts[i];
-		printf("Equal? %d\n", p1 == p2);
-		post_print_debug(p2);
+		post_struct* post = post_get_from_darray_of_post_pointers(&tag_posts->posts, i);
+		printf("Post %zu title:\t%s\n", i + 1, post->title.str);
 	}
 }
