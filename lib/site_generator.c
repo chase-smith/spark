@@ -1,4 +1,57 @@
 #include "site_generator.h"
+
+int remove_nonexistent_post_single(dstring_struct* base_dir, struct dirent* dir_ent, void* site_content_void_ptr) {
+	// Skip processing of index.html file
+	if(!strcmp(dir_ent->d_name, "index.html")) {
+		return 1;
+	}
+
+	// Skip non-HTML files
+	if(!is_html_filename(dir_ent->d_name)) {
+		return 1;
+	}
+	site_content_struct* site_content = site_content_void_ptr;
+
+	// -5 for the .html ending
+	char* post_name = strndup(dir_ent->d_name, strlen(dir_ent->d_name) - 5);
+	if(!post_name) {
+		fprintf(stderr, "Error removing single nonexistent post, strndup error\n");
+		return 0;
+	}
+
+	// Try to find the post
+	post_struct* post = find_post_by_folder_name(site_content, post_name);
+	free(post_name);
+
+	// If we found it, we aren't going to remove the file
+	if(post) {
+		return 1;
+	}
+
+	// Didn't find the post, remove the file
+	int res = remove_file_in_directory(base_dir, dir_ent->d_name);
+	if(!res) {
+		fprintf(stderr, "Error removing single nonexistent post, unlink error\n");
+	}
+	return res;
+}
+int remove_nonexistent_posts_for_theme(site_content_struct* site_content, theme_struct* theme) {
+	dstring_struct base_dir;
+	dstring_lazy_init(&base_dir);
+	if(!dstring_append_printf(&base_dir, "%s/posts/", theme->html_base_dir.str)) {
+		fprintf(stderr, "Error removing nonexistent posts for %s theme, dstring append error\n", theme->name.str);
+		dstring_free(&base_dir);
+		return 0;
+	}
+
+	int res = apply_function_to_directory_entries(&base_dir, 0, DT_REG, remove_nonexistent_post_single, site_content);
+	dstring_free(&base_dir);
+
+	if(!res) {
+		fprintf(stderr, "Error removing nonexistent posts for %s theme\n", theme->name.str);
+	}
+	return res;
+}
 int remove_old_tag_files(site_content_struct* site_content, theme_struct* theme) {
 	dstring_struct tag_dir;
 
@@ -248,7 +301,13 @@ int generate_misc_pages(site_content_struct* site_content) {
 	return 1;
 }
 int generate_posts(site_content_struct* site_content) {
-	// TODO: Remove old posts
+	// Remove nonexistent posts
+	if(!remove_nonexistent_posts_for_theme(site_content, &site_content->dark_theme)
+		|| !remove_nonexistent_posts_for_theme(site_content, &site_content->bright_theme)) {
+		fprintf(stderr, "Error generating posts, couldn't remove nonexistent posts\n");
+		return 0;
+	}
+
 	for(size_t i = 0; i < site_content->posts.length; i++) {
 		post_struct* post = post_get_from_darray(&site_content->posts, i);
 		if(!create_post_page(site_content, post)) {
@@ -256,6 +315,8 @@ int generate_posts(site_content_struct* site_content) {
 			return 0;
 		}
 	}
+
+	// TODO: Generate a page /posts/index.html
 	return 1;
 }
 int make_series_dir(series_struct* series, theme_struct* theme) {
