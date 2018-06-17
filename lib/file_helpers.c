@@ -70,6 +70,35 @@ int is_html_filename(const char* filename) {
 		&& filename[len-5] == '.';
 		
 }
+
+
+int apply_function_to_directory_entries(dstring_struct* directory, int include_dot_files, unsigned char dirent_types, int (*func)(dstring_struct*, struct dirent*, void*), void* context) {
+	DIR* dir = opendir(directory->str);
+	if(!dir) {
+		fprintf(stderr, "Error applying function to directory entries, error opening directory %s\n", directory->str);
+		return 0;
+	}
+
+	struct dirent* dir_ent;
+	int had_error = 0;
+
+	while( !had_error && (dir_ent = readdir(dir)) ) {
+		// Skip dot files if needed
+		if(!include_dot_files && dir_ent->d_name[0] == '.') {
+			continue;
+		}
+
+		// Skip dirent_types that we aren't looking for
+		if(!(dir_ent->d_type & dirent_types)) {
+			continue;
+		}
+
+		had_error = !func(directory, dir_ent, context);
+	}
+	closedir(dir);
+	return !had_error;
+}
+
 // Calling code must free the array when done.
 darray_struct* get_html_filenames_in_directory(const char* directory) {
 	darray_struct* filenames = malloc(sizeof(darray_struct));

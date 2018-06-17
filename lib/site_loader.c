@@ -69,7 +69,32 @@ int load_html_components(configuration_struct* configuration, site_content_struc
 int series_sort_compare(const void* series_a, const void* series_b) {
 	return ((series_struct*)series_a)->order - ((series_struct*)series_b)->order;
 }
+int load_single_series(dstring_struct* base_dir, struct dirent* dir_ent, void* site_content_void_ptr) {
+	site_content_struct* site_content = site_content_void_ptr;
 
+	if(!dstring_append(base_dir, dir_ent->d_name)) {
+		fprintf(stderr, "Error loading single series, dstring append error\n");
+		return 0;
+	}
+	series_struct tmp_series_entry;
+	series_init(&tmp_series_entry);
+	
+	if(!series_load(&tmp_series_entry, base_dir, dir_ent->d_name)) {
+		fprintf(stderr, "Warning, series folder %s doesn't contain a valid series. Skipping\n", dir_ent->d_name);
+		dstring_remove_num_chars_in_text(base_dir, dir_ent->d_name);
+		series_free(&tmp_series_entry);
+		return 1;
+	}
+	dstring_remove_num_chars_in_text(base_dir, dir_ent->d_name);
+	// OK, so we loaded the series in. Store it in the array, we'll
+	// sort it later.
+	if(!darray_append(&site_content->series, &tmp_series_entry)) {
+		fprintf(stderr, "Error reading series data, darray append error\n");
+		series_free(&tmp_series_entry);
+		return 0;
+	}
+	return 1;
+}
 int load_series(configuration_struct* configuration, site_content_struct* site_content) {
 	dstring_struct base_dir;
 
@@ -81,72 +106,39 @@ int load_series(configuration_struct* configuration, site_content_struct* site_c
 		dstring_free(&base_dir);
 		return 0;
 	}
-	// Series will be sorted using qsort, which sorts in-place.
-	DIR* series_dir = opendir(base_dir.str);
-	if(series_dir == NULL) {
-		fprintf(stderr, "Error opening series dir\n");
-		dstring_free(&base_dir);
-		return 0;
-	}
-	struct dirent* dir_ent;
-	int had_error = 0;
-	while(1) {
-		dir_ent = readdir(series_dir);
-		if(!dir_ent) break;
-		// Skip non-directories
-		if(!dstring_append(&base_dir, dir_ent->d_name)) {
-			fprintf(stderr, "Error reading series folder contents, dstring append error\n");
-			had_error = 1;
-			break;
-		}
-		// Need to remove '.' and '..'
-		if(!strcmp(dir_ent->d_name, ".") || !strcmp(dir_ent->d_name, "..")) {
-			dstring_remove_num_chars_in_text(&base_dir, dir_ent->d_name);
-			continue;
-		}
-		// 0 means dir, non-zero means non-dir or error
-		
-		if(!check_is_dir(base_dir.str)) {
-			dstring_remove_num_chars_in_text(&base_dir, dir_ent->d_name);
-			continue;
-		}
-		// So it's a directory... Let's try to load it. If we can't, we won't
-		// count it as a critical error, it just means that the series won't
-		// be loaded in, because the series dir doesn't have enough data.
-		series_struct tmp_series_entry;
-		series_init(&tmp_series_entry);
-
-		if(!series_load(&tmp_series_entry, &base_dir, dir_ent->d_name)) {
-			fprintf(stderr, "Warning, series folder %s doesn't contain a valid series. Skipping\n", dir_ent->d_name);
-			dstring_remove_num_chars_in_text(&base_dir, dir_ent->d_name);
-			series_free(&tmp_series_entry);
-			continue;
-		}
-		// OK, so we loaded the series in. Store it in the array, we'll
-		// sort it later.
-		if(!darray_append(&site_content->series, &tmp_series_entry)) {
-			fprintf(stderr, "Error reading series data, darray append error\n");
-			series_free(&tmp_series_entry);
-			had_error = 1;
-			break;
-		}
-		dstring_remove_num_chars_in_text(&base_dir, dir_ent->d_name);
-		
-	}
-	if(had_error) {
-		for(size_t i = 0; i < site_content->series.length; i++) {
-			series_free(&((series_struct*)site_content->series.array)[i]);
-		}
-	}
+	int res = apply_function_to_directory_entries(&base_dir, 0, DT_DIR, load_single_series, site_content);
 	dstring_free(&base_dir);
-	closedir(series_dir);
-	if(had_error) {
+	if(!res) {
 		return 0;
 	}
+	// Series will be sorted using qsort, which sorts in-place.
 	qsort(site_content->series.array, site_content->series.length, site_content->series.elem_size, &series_sort_compare);
 
 	return 1;
 	
+}
+int load_single_misc_page(dstring_struct* base_dir, struct dirent* dir_ent, void* site_content_void_ptr) {
+	site_content_struct* site_content = site_content_void_ptr;
+	if(!dstring_append(base_dir, dir_ent->d_name)) {
+		fprintf(stderr, "Error loading single misc page, dstring append error\n");
+		return 0;
+	}
+	misc_page_struct tmp_misc_page_entry;
+	misc_page_init(&tmp_misc_page_entry);
+	if(!misc_page_load(&tmp_misc_page_entry, base_dir)) {
+		fprintf(stderr, "Error, misc_pages folder %s doesn't contain a valid misc page.\n", dir_ent->d_name);
+		dstring_remove_num_chars_in_text(base_dir, dir_ent->d_name);
+		misc_page_free(&tmp_misc_page_entry);
+		return 0;
+	}
+	dstring_remove_num_chars_in_text(base_dir, dir_ent->d_name);
+	// OK, so we loaded the misc page in. Store it.
+	if(!darray_append(&site_content->misc_pages, &tmp_misc_page_entry)) {
+		fprintf(stderr, "Error reading misc_pages data, darray append error\n");
+		misc_page_free(&tmp_misc_page_entry);
+		return 0;
+	}
+	return 1;
 }
 int load_misc_pages(configuration_struct* configuration, site_content_struct* site_content) {
 	dstring_struct base_dir;
@@ -159,64 +151,12 @@ int load_misc_pages(configuration_struct* configuration, site_content_struct* si
 		dstring_free(&base_dir);
 		return 0;
 	}
-	DIR* misc_pages_dir = opendir(base_dir.str);
-	if(misc_pages_dir == NULL) {
-		fprintf(stderr, "Error opening misc_pages dir\n");
-		dstring_free(&base_dir);
-		return 0;
-	}
-	struct dirent* dir_ent;
-	int had_error = 0;
-	while(1) {
-		dir_ent = readdir(misc_pages_dir);
-		if(!dir_ent) break;
-		// Skip non-directories
-		if(!dstring_append(&base_dir, dir_ent->d_name)) {
-			fprintf(stderr, "Error reading misc_pages folder contents, dstring append error\n");
-			had_error = 1;
-			break;
-		}
-		// Need to remove '.' and '..'
-		if(!strcmp(dir_ent->d_name, ".") || !strcmp(dir_ent->d_name, "..")) {
-			dstring_remove_num_chars_in_text(&base_dir, dir_ent->d_name);
-			continue;
-		}
-		// 0 means dir, non-zero means non-dir or error
-		if(!check_is_dir(base_dir.str)) {
-			dstring_remove_num_chars_in_text(&base_dir, dir_ent->d_name);
-			continue;
-		}
-		// So it's a directory... Let's try to load it.
-		misc_page_struct tmp_misc_page_entry;
-		misc_page_init(&tmp_misc_page_entry);
-		if(!misc_page_load(&tmp_misc_page_entry, &base_dir)) {
-			fprintf(stderr, "Error, misc_pages folder %s doesn't contain a valid misc page.\n", dir_ent->d_name);
-			dstring_remove_num_chars_in_text(&base_dir, dir_ent->d_name);
-			misc_page_free(&tmp_misc_page_entry);
-			had_error = 1;
-			break;
-		}
-		// OK, so we loaded the misc page in. Store it.
-		if(!darray_append(&site_content->misc_pages, &tmp_misc_page_entry)) {
-			fprintf(stderr, "Error reading misc_pages data, darray append error\n");
-			misc_page_free(&tmp_misc_page_entry);
-			had_error = 1;
-			break;
-		}
-		dstring_remove_num_chars_in_text(&base_dir, dir_ent->d_name);
-		
-	}
-	if(had_error) {
-		for(size_t i = 0; i < site_content->misc_pages.length; i++) {
-			misc_page_free(&((misc_page_struct*)site_content->misc_pages.array)[i]);
-		}
-	}
-	dstring_free(&base_dir);
-	closedir(misc_pages_dir);
-	if(had_error) {
-		return 0;
-	}
 
+	int res = apply_function_to_directory_entries(&base_dir, 0, DT_DIR, load_single_misc_page, site_content);
+	dstring_free(&base_dir);
+	if(!res) {
+		return 0;
+	}
 	return 1;
 	
 }
@@ -423,6 +363,35 @@ int load_post_dates(configuration_struct* configuration, site_content_struct* si
 	}
 	return 1;
 }
+
+int load_single_post(dstring_struct* base_dir, struct dirent* dir_ent, void* site_content_void_ptr) {
+	site_content_struct* site_content = site_content_void_ptr;
+	if(!dstring_append(base_dir, dir_ent->d_name)) {
+		fprintf(stderr, "Error loading single post, dstring append error\n");
+		return 0;
+	}
+
+	post_struct tmp_post_entry;
+	post_init(&tmp_post_entry);
+
+	int generate_flag_missing = 0;
+	if(!post_load(&tmp_post_entry, base_dir, dir_ent->d_name, &generate_flag_missing) && generate_flag_missing) {
+		fprintf(stderr, "Skipping post %s because generate flag is missing\n", dir_ent->d_name);
+		dstring_remove_num_chars_in_text(base_dir, dir_ent->d_name);
+		post_free(&tmp_post_entry);
+		return 1;
+	}
+
+	dstring_remove_num_chars_in_text(base_dir, dir_ent->d_name);
+
+	if(!darray_append(&site_content->posts, &tmp_post_entry)) {
+		fprintf(stderr, "Error reading post data, darray append error\n");
+		post_free(&tmp_post_entry);
+		return 0;
+	}
+	return 1;
+}
+
 // TODO: Consider putting posts into series even if they won't be published; then, check
 // whether or not a post can be published when printing it out
 int load_posts(configuration_struct* configuration, site_content_struct* site_content) {
@@ -439,64 +408,9 @@ int load_posts(configuration_struct* configuration, site_content_struct* site_co
 		dstring_free(&base_dir);
 		return 0;
 	}
-	DIR* posts_dir = opendir(base_dir.str);
-	if(posts_dir == NULL) {
-		fprintf(stderr, "Error opening posts dir\n");
-		dstring_free(&base_dir);
-		return 0;
-	}
-	struct dirent* dir_ent;
-	int had_error = 0;
-	while(1) {
-		dir_ent = readdir(posts_dir);
-		if(!dir_ent) break;
-		// Skip non-directories
-		if(!dstring_append(&base_dir, dir_ent->d_name)) {
-			fprintf(stderr, "Error reading posts folder contents, dstring append error\n");
-			had_error = 1;
-			break;
-		}
-		// Need to remove '.' and '..'
-		if(!strcmp(dir_ent->d_name, ".") || !strcmp(dir_ent->d_name, "..")) {
-			dstring_remove_num_chars_in_text(&base_dir, dir_ent->d_name);
-			continue;
-		}
-		// 0 means dir, non-zero means non-dir or error
-		if(!check_is_dir(base_dir.str)) {
-			dstring_remove_num_chars_in_text(&base_dir, dir_ent->d_name);
-			continue;
-		}
-		// So it's a directory... Let's try to load it. If we can't, we won't
-		// count it as a critical error, it just means that the post
-		// won't be loaded in, because the post dir doesn't have enough data.
-		post_struct tmp_post_entry;
-		post_init(&tmp_post_entry);
-
-		int generate_flag_missing = 0;
-		if(!post_load(&tmp_post_entry, &base_dir, dir_ent->d_name, &generate_flag_missing) && generate_flag_missing) {
-			fprintf(stderr, "Skipping post %s because generate flag is missing\n", dir_ent->d_name);
-			dstring_remove_num_chars_in_text(&base_dir, dir_ent->d_name);
-			post_free(&tmp_post_entry);
-			continue;
-		}
-		if(!darray_append(&site_content->posts, &tmp_post_entry)) {
-			fprintf(stderr, "Error reading post data, darray append error\n");
-			post_free(&tmp_post_entry);
-			had_error = 1;
-			break;
-		}
-		dstring_remove_num_chars_in_text(&base_dir, dir_ent->d_name);
-		
-	}
-	if(had_error) {
-		for(size_t i = 0; i < site_content->posts.length; i++) {
-			post_struct* post = post_get_from_darray(&site_content->posts, i);
-			post_free(post);
-		}
-	}
+	int res = apply_function_to_directory_entries(&base_dir, 0, DT_DIR, load_single_post, site_content);
 	dstring_free(&base_dir);
-	closedir(posts_dir);
-	if(had_error) {
+	if(!res) {
 		return 0;
 	}
 	// OK... So now that they are all loaded, we need to validate dates.

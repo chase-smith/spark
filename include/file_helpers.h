@@ -52,4 +52,11 @@ int remove_file_in_directory(dstring_struct* base_dir, const char* file);
 // if it wasn't found.
 size_t get_file_extension_start(const char*);
 
+// For each directory entry (struct dirent) that matches one of the d_type flags
+// in dirent_types (see `man 3 readdir`), skipping dot files if desired,
+// call the function func with the directory, struct dirent, and a context.
+// func should return 0 if processing should be aborted.
+// Returns 0 on error.
+int apply_function_to_directory_entries(dstring_struct* directory, int include_dot_files, unsigned char dirent_types, int (*func)(dstring_struct*, struct dirent*, void*), void* context);
+
 #endif
