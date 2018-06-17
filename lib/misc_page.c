@@ -21,7 +21,6 @@ misc_page_struct* misc_page_load(misc_page_struct* misc_page, dstring_struct* ba
 	return misc_page;
 }
 void misc_page_init(misc_page_struct* misc_page) {
-	misc_page->generate = 0;
 	dstring_lazy_init(&misc_page->content);
 	dstring_lazy_init(&misc_page->title);
 	dstring_lazy_init(&misc_page->filename);
