@@ -659,8 +659,8 @@ int generate_site_internal(configuration_struct* configuration) {
 int generate_site(configuration_struct* configuration) {
 	dstring_struct cbase_dir;
 	dstring_lazy_init(&cbase_dir);
-	if(!dstring_append(&cbase_dir, configuration->code_base_dir)) {
-		fprintf(stderr, "Error appending code base dir\n");
+	if(!dstring_append(&cbase_dir, configuration->content_base_dir)) {
+		fprintf(stderr, "Error appending content base dir\n");
 		return 0;
 	}
 	if(!make_directory(&cbase_dir, "/generating")) {

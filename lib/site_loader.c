@@ -4,7 +4,7 @@ int load_themes(configuration_struct* configuration, site_content_struct* site_c
 
 	dstring_lazy_init(&base_dir);
 
-	if(!dstring_append(&base_dir, configuration->code_base_dir) 
+	if(!dstring_append(&base_dir, configuration->content_base_dir) 
 		|| !dstring_append(&base_dir, "/themes/bright")) {
 		fprintf(stderr, "Error loading themes, dstring append error\n");
 		dstring_free(&base_dir);
@@ -51,7 +51,7 @@ int load_html_components(configuration_struct* configuration, site_content_struc
 
 	dstring_lazy_init(&base_dir);
 
-	if(!dstring_append(&base_dir, configuration->code_base_dir)
+	if(!dstring_append(&base_dir, configuration->content_base_dir)
 		|| !dstring_append(&base_dir, "/components")) {
 		fprintf(stderr, "Error loading HTML components, dstring append error\n");
 		dstring_free(&base_dir);
@@ -100,7 +100,7 @@ int load_series(configuration_struct* configuration, site_content_struct* site_c
 
 	dstring_lazy_init(&base_dir);
 
-	if(!dstring_append(&base_dir, configuration->code_base_dir)
+	if(!dstring_append(&base_dir, configuration->content_base_dir)
 		|| !dstring_append(&base_dir, "/series/")) {
 		fprintf(stderr, "Error loading all series, dstring append error\n");
 		dstring_free(&base_dir);
@@ -145,7 +145,7 @@ int load_misc_pages(configuration_struct* configuration, site_content_struct* si
 
 	dstring_lazy_init(&base_dir);
 
-	if(!dstring_append(&base_dir, configuration->code_base_dir)
+	if(!dstring_append(&base_dir, configuration->content_base_dir)
 		|| !dstring_append(&base_dir, "/misc_pages/")) {
 		fprintf(stderr, "Error loading all misc_pages, dstring append error\n");
 		dstring_free(&base_dir);
@@ -207,7 +207,7 @@ int load_post_dates(configuration_struct* configuration, site_content_struct* si
 	dstring_lazy_init(&date_output);
 	darray_lazy_init(&read_dates, sizeof(char*));
 
-	if(!dstring_append(&base_dir, configuration->code_base_dir)
+	if(!dstring_append(&base_dir, configuration->content_base_dir)
 		|| !dstring_append(&base_dir, "/generating/post_dates")) {
 		fprintf(stderr, "Error getting post dates, base_dir dstring append error\n");
 		dstring_free(&base_dir);
@@ -402,7 +402,7 @@ int load_posts(configuration_struct* configuration, site_content_struct* site_co
 
 	dstring_lazy_init(&base_dir);
 
-	if(!dstring_append(&base_dir, configuration->code_base_dir)
+	if(!dstring_append(&base_dir, configuration->content_base_dir)
 		|| !dstring_append(&base_dir, "/posts/")) {
 		fprintf(stderr, "Error loading all posts, dstring append error\n");
 		dstring_free(&base_dir);

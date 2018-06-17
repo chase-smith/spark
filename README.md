@@ -116,7 +116,7 @@ The following configuration options exist right now, though some of these will c
 - `BRIGHT_NAME`: The text that will appear when you're on a dark page and looking at the link that will take you to the bright-themed version of the same page. You'll probably want to keep this as 'Bright'.
 - `DARK_NAME`: The text that will appear when you're on a bright page and looking at the link that will take you to the dark-themed version of the same page. You'll probably want to keep this as 'Dark'.
 - `HTML_BASE_DIR`: The root HTML directory (with no trailing slash). This directory will be populated with a 'dark' and 'bright' folder. Make sure whoever Spark runs as has the appropriate rights to do so.
-- `CODE_BASE_DIR`: The name of this variable will change in the future. This is the base site content directory (with no trailing slash), the directory that has all of the folders and files detailed above.
+- `CONTENT_BASE_DIR`: This is the base site content directory (with no trailing slash), the directory that has all of the folders and files detailed above.
 - `SITE_GROUP`: Presently unused, this is the name of the group that all created files/folders will be owned by (note, this doesn't happen yet, I haven't gotten around to doing this yet).
 - `RSS_DESCRIPTION`: A description of the site to include in the RSS feed.
 
