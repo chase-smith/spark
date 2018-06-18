@@ -725,7 +725,6 @@ int dstringbuilder_internal_compare_to_file(dstringbuilder_struct* dstringbuilde
 		} else {
 			int res = dstringbuilder_internal_compare_to_file(dsbi->dstringbuilder, fd);
 			if(res != 0) {
-				printf("HEY!\n");
 				return res;
 			}
 		}
