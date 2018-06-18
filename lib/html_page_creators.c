@@ -1,5 +1,21 @@
 #include "dobjects.h"
 #include "html_page_creators.h"
+
+#define GENMODE_POST 1
+#define GENMODE_STATIC 2
+
+typedef struct page_generation_settings_struct {
+	char* filename;
+	char* keywords;
+	char* description;
+	char* title;
+	char* author;
+	char* canonical_url;
+	char* url_path;
+	int has_code;
+} page_generation_settings_struct;
+
+
 int create_page(site_content_struct* site_content, dstringbuilder_struct* page_content, theme_struct* theme, page_generation_settings_struct* page_generation_settings) {
 	dstring_struct dest_filename;
 	dstringbuilder_struct page_builder;
