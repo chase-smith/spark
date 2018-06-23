@@ -193,7 +193,6 @@ time_t read_time_from_str(const char* str) {
  * some unpleasant work with gmtime and such. Huzzah!
  */
 
-// TODO: Sort posts on written-date
 int load_post_dates(configuration_struct* configuration, site_content_struct* site_content) {
 	dstring_struct base_dir;
 	dstring_struct out_dates;
@@ -395,7 +394,7 @@ int load_single_post(dstring_struct* base_dir, struct dirent* dir_ent, void* sit
 // TODO: Consider putting posts into series even if they won't be published; then, check
 // whether or not a post can be published when printing it out
 int load_posts(configuration_struct* configuration, site_content_struct* site_content) {
-	// Posts will have their dates validate after all are loaded in.
+	// Posts will have their dates validated after all are loaded in.
 	// This is due to the timezone conversion stuff mentioned at the top
 	// of the program.
 	dstring_struct base_dir;
