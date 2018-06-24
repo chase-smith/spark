@@ -123,37 +123,33 @@ tag_posts_struct* find_tag_posts_by_tag(site_content_struct* site_content, const
 	}
 	return NULL;
 }
+
+int populate_suggested_post_array(site_content_struct* site_content, darray_struct* suggested_post_names, darray_struct* suggested_posts_darray, const char* base_post_name, const char* suggested_post_type) {
+	for(size_t i = 0; i < suggested_post_names->length; i++) {
+		const char* post_name = *((const char**) darray_get_elem(suggested_post_names, i));
+		post_struct* post = find_post_by_folder_name(site_content, post_name);
+		if(!post) {
+			fprintf(stderr, "Error populating suggested posts, %s post %s not found for post %s\n", suggested_post_type, post_name, base_post_name);
+			return 0;
+		}
+		if(!darray_append(suggested_posts_darray, &post)) {
+			fprintf(stderr, "Error populating suggested posts, %s post %s could not be appended to post %s\n", suggested_post_type, post_name, base_post_name);
+			return 0;
+		}
+	}
+	return 1;
+}
+
 // Validate post names, series names, etc. Sets up links for series and posts
 int validate_posts(site_content_struct* site_content) {
 	for(size_t i = 0; i < site_content->posts.length; i++) {
 		post_struct* post = post_get_from_darray(&site_content->posts, i);
-		const char** suggested_prev_reading_names_strs = (const char**) post->suggested_prev_reading_names.array;
-		for(size_t j = 0; j < post->suggested_prev_reading_names.length; j++) {
-			const char* prev_post_name = suggested_prev_reading_names_strs[j];
-			post_struct* prev_post = find_post_by_folder_name(site_content, prev_post_name);
-			if(!prev_post) {
-				fprintf(stderr, "Error validating posts, previous post %s not found for post %s\n", prev_post_name, post->folder_name.str);
-				return 0;
-			}
-			if(!darray_append(&post->suggested_prev_reading, &prev_post)) {
-				fprintf(stderr, "Error validating posts, suggested_prev_reading darray append error\n");
-				return 0;
-			}
+
+		if(!populate_suggested_post_array(site_content, &post->suggested_prev_reading_names, &post->suggested_prev_reading, post->folder_name.str, "previous")
+			|| !populate_suggested_post_array(site_content, &post->suggested_next_reading_names, &post->suggested_next_reading, post->folder_name.str, "next")) {
+			return 0;
 		}
-		// TODO: This is basically identical to suggested_prev_reading
-		const char** suggested_next_reading_names_strs = (const char**) post->suggested_next_reading_names.array;
-		for(size_t j = 0; j < post->suggested_next_reading_names.length; j++) {
-			const char* next_post_name = suggested_next_reading_names_strs[j];
-			post_struct* next_post = find_post_by_folder_name(site_content, next_post_name);
-			if(!next_post) {
-				fprintf(stderr, "Error validating posts, next post %s not found for post %s\n", next_post_name, post->folder_name.str);
-				return 0;
-			}
-			if(!darray_append(&post->suggested_next_reading, &next_post)) {
-				fprintf(stderr, "Error validating posts, suggested_next_reading darray append error\n");
-				return 0;
-			}
-		}
+
 		series_struct* series = find_series_by_folder_name(site_content, post->series_name.str);
 		if(!series) {
 			fprintf(stderr, "Error validating posts, unknown series %s for post %s\n", post->series_name.str, post->folder_name.str);
