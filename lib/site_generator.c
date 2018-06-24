@@ -517,18 +517,8 @@ int write_rss_file_if_different(dstring_struct* rss_dstring, const char* filenam
 	dstring_free(&file_contents);
 	return 1;
 }
-
-int generate_main_rss(configuration_struct* configuration, site_content_struct* site_content) {
-	time_t now_time;
-	dstring_struct rss_feed;
-	dstring_struct rss_filename;
-
-	dstring_lazy_init(&rss_feed);
-	dstring_lazy_init(&rss_filename);
-
-	time(&now_time);
-
-	struct tm* time_struct = gmtime(&now_time);
+int append_rss_time(dstring_struct* rss, time_t time) {
+	struct tm* time_struct = gmtime(&time);
 	if(time_struct == NULL) {
 		fprintf(stderr, "Error generating RSS, couldn't get time\n");
 		return 0;
@@ -539,9 +529,31 @@ int generate_main_rss(configuration_struct* configuration, site_content_struct* 
 		fprintf(stderr, "Error generating RSS, couldn't strftime\n");
 		return 0;
 	}
+	if(!dstring_append(rss, buff)) {
+		fprintf(stderr, "Error generating RSS, couldn't append time\n");
+		return 0;
+	}
+	return 1;
+}
+int generate_main_rss(configuration_struct* configuration, site_content_struct* site_content) {
+	dstring_struct rss_feed;
+	dstring_struct rss_filename;
+
+	dstring_lazy_init(&rss_feed);
+	dstring_lazy_init(&rss_filename);
+
+	if(!dstring_append(&rss_feed, "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<rss version=\"2.0\">\n<channel>\n<lastBuildDate>")) {
+		fprintf(stderr, "Error generating RSS, dstring append error\n");
+		dstring_free(&rss_feed);
+		return 0;
+	}
+	if(!append_rss_time(&rss_feed, site_content->current_time)) {
+		fprintf(stderr, "Error generating RSS, error appending time\n");
+		dstring_free(&rss_feed);
+		return 0;
+	}
 	if(!dstring_append_printf(&rss_feed,
-				"<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<rss version=\"2.0\">\n<channel>\n<lastBuildDate>%s</lastBuildDate>\n<title>%s posts</title>\n<link>https://%s/</link>\n<description>%s</description>\n",
-				buff,
+				"</lastBuildDate>\n<title>%s posts</title>\n<link>https://%s/</link>\n<description>%s</description>\n",
 				configuration->bright_host,
 				configuration->bright_host,
 				configuration->rss_description)) {
@@ -552,24 +564,14 @@ int generate_main_rss(configuration_struct* configuration, site_content_struct* 
 	for(size_t i = 0; i < site_content->posts.length; i++) {
 		post_struct* post = post_get_from_darray(&site_content->posts, i);
 		if(!post->can_publish) continue;
-		struct tm* post_time_struct = gmtime(&post->written_date_time);
-		if(post_time_struct == NULL) {
-			fprintf(stderr, "Error generating RSS, couldn't get post time\n");
-			dstring_free(&rss_feed);
-			return 0;
-		}
-		char post_buff[51];
-		size_t strftime_res2 = strftime(post_buff, 50, "%a, %d %b %Y %T %z", post_time_struct);
-		if(strftime_res2 == 0) {
-			fprintf(stderr, "Error generating RSS, couldn't strftime for post\n");
-			dstring_free(&rss_feed);
-			return 0;
-		}
+
 		if(!dstring_append_printf(&rss_feed,
-					"<item>\n<title>%s</title>\n<category>%s</category>\n<pubDate>%s</pubDate>\n<link>https://%s/posts/%s</link>\n<description>%s</description>\n</item>\n",
+					"<item>\n<title>%s</title>\n<category>%s</category>\n<pubDate>",
 					post->title.str,
-					post->series->title.str,
-					post_buff,
+					post->series->title.str)
+			|| !append_rss_time(&rss_feed, post->written_date_time)
+			|| !dstring_append_printf(&rss_feed,
+					"</pubDate>\n<link>https://%s/posts/%s</link>\n<description>%s</description>\n</item>\n",
 					configuration->bright_host,
 					post->folder_name.str,
 					post->long_description.str)) {
@@ -595,6 +597,9 @@ int generate_main_rss(configuration_struct* configuration, site_content_struct* 
 		dstring_free(&rss_feed);
 		dstring_free(&rss_filename);
 		return 0;
+	}
+	if(did_write) {
+		printf("Updated RSS feed\n");
 	}
 	dstring_free(&rss_feed);
 	dstring_free(&rss_filename);
